@@ -24,11 +24,11 @@ imagePullSecrets: []
 controller:
   # Number of replicas
   replicaCount: 1
-
+  
   # Leader election settings
   leaderElection:
     enabled: true
-
+  
   # Health probe configuration
   healthProbe:
     bindAddress: ":8081"
@@ -38,13 +38,13 @@ controller:
     readinessProbe:
       initialDelaySeconds: 5
       periodSeconds: 10
-
+  
   # Metrics configuration
   metrics:
     enabled: true
     bindAddress: ":8443"
     secureServing: true
-
+  
   env: []
 
 # Pod annotations

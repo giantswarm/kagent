@@ -103,4 +103,4 @@ Create controller manager container args
 {{- $args = append $args (printf "--watch-namespaces=%s" (join "," $namespaces)) }}
 {{- end }}
 {{- toYaml $args }}
-{{- end }}
+{{- end }} 

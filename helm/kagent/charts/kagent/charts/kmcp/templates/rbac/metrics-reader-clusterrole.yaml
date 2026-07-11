@@ -12,4 +12,4 @@ rules:
   verbs:
   - get
 {{- end }}
-{{- end }}
+{{- end }} 

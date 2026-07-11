@@ -15,4 +15,4 @@ spec:
     targetPort: {{ .Values.service.targetPort }}
   selector:
     {{- include "kmcp.selectorLabels" . | nindent 4 }}
-{{- end }}
+{{- end }} 

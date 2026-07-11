@@ -8,11 +8,10 @@ directories:
   path: helm/kagent/charts/kagent
 - contents:
   - git:
-      commitTitle: 'fix(substrate): bump amd64 runsc default to gVisor nightly 2026-06-02
-        (#2035)...'
-      sha: e9e4e34d6bd2d5950e81fefbcfd0bab70ea1eaaa
+      commitTitle: 'Backport(0.9.x): go-adk Ollama and Bedrock system prompts (#2122)...'
+      sha: 14dcbfc49bde990a0c737da14a9d94cf7e788303
       tags:
-      - v0.9.9
+      - v0.9.11
     path: kagent.dev
   - git:
       commitTitle: 'refactor(helm): remove rbac.clusterScoped, derive RBAC scope from

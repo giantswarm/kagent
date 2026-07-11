@@ -12,7 +12,7 @@ dependencies:
   condition: redis.enabled
   name: redis
   repository: https://charts.bitnami.com/bitnami
-  version: 27.0.12
+  version: 18.12.1
 description: A reverse proxy that provides authentication with Google, Github or other
   providers
 home: https://oauth2-proxy.github.io/oauth2-proxy/

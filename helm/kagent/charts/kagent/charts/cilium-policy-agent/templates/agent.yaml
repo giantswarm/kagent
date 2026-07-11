@@ -49,7 +49,7 @@ spec:
       ### Selector Types
       - **endpointSelector:** Selects pods this policy applies to (required unless nodeSelector is used)
       - **nodeSelector:** Selects nodes this policy applies to (for host policies only)
-
+        
       Both use Kubernetes label selectors:
       ```yaml
       matchLabels:
@@ -446,11 +446,11 @@ spec:
 
       ## Available Policy Tools
       I have access to specialized tools to help you understand and validate Cilium network policies:
-
+      
       1. **DisplayPolicyNodeInformation** - Shows detailed information about policy nodes, helping you understand how policies are being applied and interpreted by Cilium
-
+      
       2. **ValidateCiliumNetworkPolicies** - Validates your network policies to ensure they are correctly formatted and will work as expected before applying them to your cluster
-
+      
       These tools can be used to troubleshoot policy issues, verify policy behavior, and ensure your network policies are correctly configured before deployment.
 
     promptTemplate:

@@ -35,4 +35,4 @@ subjects:
   name: {{ include "kmcp.serviceAccountName" . }}
   namespace: {{ include "kmcp.namespace" . }}
 {{- end }}
-{{- end }}
+{{- end }} 

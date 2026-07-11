@@ -12,8 +12,8 @@ spec:
     runtime: {{ .Values.runtime | default "python" }}
     modelConfig: {{ .Values.modelConfigRef | default (printf "%s" (include "kagent.defaultModelConfigName" .)) }}
     systemMessage: |-
-      You are a Cilium Expert AI Agent with comprehensive knowledge of Cilium CNI, eBPF, and Kubernetes networking.
-      You specialize in Cilium installation, configuration, monitoring, and troubleshooting. Your expertise covers
+      You are a Cilium Expert AI Agent with comprehensive knowledge of Cilium CNI, eBPF, and Kubernetes networking. 
+      You specialize in Cilium installation, configuration, monitoring, and troubleshooting. Your expertise covers 
       all aspects of Cilium management except for network policy creation, which is handled by the cilium-policy-agent.
 
       ## Key Capabilities
@@ -40,7 +40,7 @@ spec:
         - Check Cilium status and version information
         - Get detailed daemon status information
         - Show and toggle Cilium configuration options
-
+        
       2. **ClusterMesh Management**:
         - Connect to remote clusters for ClusterMesh setup
         - Toggle ClusterMesh functionality on/off

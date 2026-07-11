@@ -13,7 +13,7 @@ ACCESSING THE UI:
 
 ACCESSING THE CONTROLLER API:
   kubectl -n {{ include "kagent.namespace" . }} port-forward service/{{ include "kagent.fullname" . }}-controller {{ .Values.controller.service.ports.port }}:{{ .Values.controller.service.ports.port }}
-
+  
   API endpoint: http://localhost:{{ .Values.controller.service.ports.port }}/api
 
 DEPLOYED COMPONENTS:

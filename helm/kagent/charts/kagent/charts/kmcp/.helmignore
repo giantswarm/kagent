@@ -19,4 +19,4 @@ Makefile
 # Exclude build artifacts
 bin/
 dist/
-*.tgz
+*.tgz 

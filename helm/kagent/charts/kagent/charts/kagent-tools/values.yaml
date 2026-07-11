@@ -76,7 +76,7 @@ securityContext: {}
   # readOnlyRootFilesystem: true
   # runAsNonRoot: true
   # runAsUser: 1000
-
+  
 # Node taints which will be tolerated for Pod.
 tolerations: []
 

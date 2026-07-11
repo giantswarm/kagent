@@ -78,4 +78,4 @@ metadata:
 rules:
   {{- include "kmcp.manager.rules" . | nindent 2 }}
 {{- end }}
-{{- end }}
+{{- end }} 

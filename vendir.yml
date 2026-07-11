@@ -29,7 +29,7 @@ directories:
   - path: kagent.dev
     git:
       url: https://github.com/kagent-dev/kagent
-      ref: v0.9.9
+      ref: v0.9.11
     includePaths:
     - helm/kagent-crds/templates/*.yaml
     newRootPath: helm/kagent-crds/templates
