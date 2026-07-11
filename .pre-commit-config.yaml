@@ -1,9 +1,10 @@
-# DO NOT EDIT. Generated with:
+# Managed in https://github.com/giantswarm/github/tree/main/repositories/override/kagent-app/.pre-commit-config.yaml
 #
-#    devctl
-#
-#    https://github.com/giantswarm/devctl/blob/01fdb02aefb5080601a1a915b526bc02e132afc6/pkg/gen/input/precommit/internal/file/pre-commit-config.yaml.template
-#
+# Override of the devctl-generated config: the upstream chart files vendored
+# via vendir under helm/kagent/charts/ lack trailing newlines, and the
+# auto-fixing base hooks would modify them on every vendir bump (and vendir
+# sync reverts the fix). Exclude the vendored subtree from those hooks.
+# See https://github.com/giantswarm/kagent-app/pull/35
 minimum_pre_commit_version: '2.17'
 default_install_hook_types: [pre-commit, commit-msg]
 repos:
@@ -15,10 +16,11 @@ repos:
       - id: check-shebang-scripts-are-executable
       - id: detect-private-key
       - id: end-of-file-fixer
-        exclude: "(.*testdata/.*|^\\.yarn/.*)"
+        exclude: "(.*testdata/.*|^\\.yarn/.*|^helm/kagent/charts/.*)"
       - id: mixed-line-ending
+        exclude: "^helm/kagent/charts/.*"
       - id: trailing-whitespace
-        exclude: "(.*testdata/.*|^\\.yarn/.*)"
+        exclude: "(.*testdata/.*|^\\.yarn/.*|^helm/kagent/charts/.*)"
 
   - repo: https://github.com/compilerla/conventional-pre-commit
     rev: v4.4.0
