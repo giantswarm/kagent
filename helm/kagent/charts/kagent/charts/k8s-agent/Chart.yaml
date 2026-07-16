@@ -2,4 +2,4 @@ apiVersion: v2
 description: A Kubernetes Agent for kagent
 name: k8s-agent
 type: application
-version: 0.9.9
+version: 0.9.11

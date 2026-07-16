@@ -13,7 +13,7 @@
 # while still documenting the GS defaults below.
 #
 # Note on the version/tag label: wrapping the upstream chart as a subchart means
-# its `.Chart.Version` stays the clean pinned `0.9.9` even when helm-controller
+# its `.Chart.Version` stays the clean pinned `0.9.11` even when helm-controller
 # sources THIS umbrella chart via OCIRepository (the OCI +digest is appended to
 # the umbrella version, not the subchart). That removes the need for the tag pin /
 # postRenderer label-sanitization hack the meta-package used when it pulled the
@@ -28,7 +28,7 @@ kagent:  # @schema additionalProperties: true
   registry: gsoci.azurecr.io/giantswarm
   # Explicit image tag matching the vendored chart version. Avoids the upstream
   # fallback to `.Chart.Version` for the image tag.
-  tag: "0.9.9"
+  tag: "0.9.11"
   controller:  # @schema additionalProperties: true
     image:  # @schema additionalProperties: true
       repository: kagent-controller
