@@ -6,4 +6,4 @@ sources:
 - https://github.com/kagent-dev/doc2vec
 - https://github.com/kagent-dev/kagent
 type: application
-version: 0.9.9
+version: 0.9.11

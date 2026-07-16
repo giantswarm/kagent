@@ -2,4 +2,4 @@ apiVersion: v2
 description: A Helm Agent for kagent
 name: helm-agent
 type: application
-version: 0.9.9
+version: 0.9.11

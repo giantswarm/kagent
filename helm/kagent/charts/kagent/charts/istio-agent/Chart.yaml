@@ -2,4 +2,4 @@ apiVersion: v2
 description: A Istio Agent for kagent
 name: istio-agent
 type: application
-version: 0.9.9
+version: 0.9.11

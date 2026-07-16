@@ -2,4 +2,4 @@ apiVersion: v2
 description: A Argo Rollouts Agent for kagent
 name: argo-rollouts-agent
 type: application
-version: 0.9.9
+version: 0.9.11

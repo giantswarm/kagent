@@ -1,6 +1,6 @@
 dependencies:
 - name: kagent
   repository: file://charts/kagent
-  version: 0.9.9
-digest: sha256:3db8be1a4b568e7b40f23266bc50407585e018432db36888f5f23c9d28efb536
-generated: "2026-06-21T22:46:13.673080762+02:00"
+  version: 0.9.11
+digest: sha256:6ccdd221f2f0cfe9f5e6758a80712a87a0d1121f617498c6b9786be46a95b788
+generated: "2026-07-16T09:33:21.327783789+02:00"

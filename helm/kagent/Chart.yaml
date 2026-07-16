@@ -4,7 +4,7 @@
 apiVersion: v2
 
 # Version of the packaged app (upstream kagent release vendored as a subchart).
-appVersion: 0.9.9
+appVersion: 0.9.11
 
 # Make sure your name DOES NOT end in "app" or "-app".
 name: kagent
@@ -38,4 +38,4 @@ dependencies:
   # chart's crds/ directory.
   - name: kagent
     repository: file://charts/kagent
-    version: 0.9.9
+    version: 0.9.11

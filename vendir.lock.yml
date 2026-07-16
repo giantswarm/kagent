@@ -3,7 +3,7 @@ directories:
 - contents:
   - helmChart:
       appVersion: ""
-      version: 0.9.9
+      version: 0.9.11
     path: .
   path: helm/kagent/charts/kagent
 - contents:
