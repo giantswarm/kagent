@@ -8,10 +8,11 @@ directories:
   path: helm/kagent/charts/kagent
 - contents:
   - git:
-      commitTitle: 'Backport(0.9.x): go-adk Ollama and Bedrock system prompts (#2122)...'
-      sha: 14dcbfc49bde990a0c737da14a9d94cf7e788303
+      commitTitle: 'Backport(0.9.x): reference declarative agents by tag; digests
+        only for sandbox agents (#2242) (#2266)...'
+      sha: b45990582595acea5f6e765b86a10b251c50d5c9
       tags:
-      - v0.9.11
+      - v0.9.12
     path: kagent.dev
   - git:
       commitTitle: 'refactor(helm): remove rbac.clusterScoped, derive RBAC scope from
