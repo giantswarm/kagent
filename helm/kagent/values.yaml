@@ -28,7 +28,7 @@ kagent:  # @schema additionalProperties: true
   registry: gsoci.azurecr.io/giantswarm
   # Explicit image tag matching the vendored chart version. Avoids the upstream
   # fallback to `.Chart.Version` for the image tag.
-  tag: "0.9.11"
+  tag: "0.9.12"
   controller:  # @schema additionalProperties: true
     image:  # @schema additionalProperties: true
       repository: kagent-controller
