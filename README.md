@@ -5,7 +5,7 @@
 Giant Swarm packaging of the upstream [`kagent-dev/kagent`](https://github.com/kagent-dev/kagent)
 controller (a Kubernetes-native AI agent runtime). This repo vendors the upstream
 app chart as a subchart and ships the kagent CRDs itself, so the app **owns its
-CRDs** — the agentic-platform meta-package no longer needs the shared
+CRDs** — the agent-platform meta-package no longer needs the shared
 `agentic-platform-crds` bundle for kagent.
 
 > The repo follows the Giant Swarm app-repo `-app` naming (`kagent-app`), while
@@ -25,12 +25,12 @@ CRDs** — the agentic-platform meta-package no longer needs the shared
 ## CRD delivery (app-owned CRDs)
 
 The CRDs live in the literal `crds/` directory and are delivered via Flux
-`crds: CreateReplace` set on the `kagent` component in the agentic-platform
+`crds: CreateReplace` set on the `kagent` component in the agent-platform
 meta-package. `CreateReplace` upgrades the CRDs in place on every release (Helm
 otherwise never upgrades `crds/`-dir CRDs), while `crds/`-dir CRDs are never
 pruned and the `helm.sh/resource-policy: keep` annotation is defense-in-depth, so
 the CRDs — and every CR of those kinds — survive uninstall. See
-[`decisions/2026-06-21-1123-adr-app-owned-crds.md`](https://github.com/giantswarm/agentic-platform)
+[`decisions/2026-06-21-1123-adr-app-owned-crds.md`](https://github.com/giantswarm/agent-platform)
 in the lab for the full rationale.
 
 Because the CRDs are server-side `Replace`d and two of the upstream CRDs are very
@@ -59,7 +59,7 @@ a `postRenderers` kustomize patch and a hard version pin in the meta-package.
 
 ## Installing
 
-This chart is consumed by the agentic-platform meta-package. It can also be
+This chart is consumed by the agent-platform meta-package. It can also be
 installed standalone via the Giant Swarm App Platform once published to the
 catalog.
 
