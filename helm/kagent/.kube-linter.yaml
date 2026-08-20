@@ -3,7 +3,7 @@
 #
 # The controller, UI and bundled agent subcharts are the vendored upstream
 # kagent-dev/kagent chart (charts/kagent). On Giant Swarm clusters the
-# restricted-PSS securityContext is applied via the agentic-platform meta-package
+# restricted-PSS securityContext is applied via the agent-platform meta-package
 # values (and a Kyverno mutate policy), not baked into this vendor wrapper's
 # defaults, so the static PSS checks are handled at the platform layer — exclude
 # them here to keep the wrapper vendor-agnostic.
@@ -15,5 +15,5 @@ checks:
     - "unset-memory-requirements"
     # The vendored upstream subcharts (e.g. grafana-mcp) reference :latest images
     # we don't control; actual subchart enablement/images are driven by the
-    # agentic-platform meta-package, not this wrapper's lint-time defaults.
+    # agent-platform meta-package, not this wrapper's lint-time defaults.
     - "latest-tag"

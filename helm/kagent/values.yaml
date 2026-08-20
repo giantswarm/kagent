@@ -5,7 +5,7 @@
 # Only Giant-Swarm-wide sensible defaults live here (registry, retagged image
 # repositories, pinned tag, naming). Cluster/topology-specific wiring (controller
 # auth mode, metrics env, security contexts, oauth2-proxy, model providers) stays
-# in the agentic-platform meta-package, which overrides these via valuesFrom.
+# in the agent-platform meta-package, which overrides these via valuesFrom.
 #
 # Every object under `kagent` is marked additionalProperties: true: the upstream
 # subchart's full (large) values structure is merged in and flows through this
