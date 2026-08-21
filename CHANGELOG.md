@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Set `appVersion` to the upstream release the chart actually vendors (`0.9.12`).
+  It was left behind on `0.9.11` when the vendir pin was bumped, because nothing
+  tracked or verified it.
+- The upstream kagent version is now typed in exactly one place: the `vendir.yml`
+  pin that Renovate edits. `make sync` propagates it into the chart metadata, and
+  `make verify-version` -- a new CircleCI job -- fails the build when any copy
+  (`vendir.lock.yml`, the vendored subchart, `appVersion`, the `file://`
+  dependency, `Chart.lock`, the CRD git ref) disagrees with it. `helm lint`,
+  `helm template` and `helm package` all pass on that kind of drift, so a bump
+  that never ran `make sync` could ship a chart claiming one upstream release and
+  containing another.
+- Renovate groups the two `vendir.yml` kagent pins -- the published OCI chart and
+  the git tag the CRDs are vendored from -- into a single PR, and never proposes
+  an upstream prerelease (upstream tags `0.10.0-rc*` and marks the newest rc as
+  the GitHub "Latest" release).
+- Drop the `kagent.tag` default. As a subchart, the upstream chart already
+  coalesces its image tag to its own `.Chart.Version`, which is the clean
+  vendored version, so the pin was a second copy of the version with no effect on
+  the rendered output.
 - Source the bundled `kagent-tools` tool-server image from
   `gsoci.azurecr.io/giantswarm/kagent-tools` (mirror of
   `ghcr.io/kagent-dev/kagent/tools`) and declare `ephemeral-storage`
