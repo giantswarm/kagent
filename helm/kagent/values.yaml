@@ -13,11 +13,12 @@
 # while still documenting the GS defaults below.
 #
 # Note on the version/tag label: wrapping the upstream chart as a subchart means
-# its `.Chart.Version` stays the clean pinned `0.9.11` even when helm-controller
-# sources THIS umbrella chart via OCIRepository (the OCI +digest is appended to
-# the umbrella version, not the subchart). That removes the need for the tag pin /
-# postRenderer label-sanitization hack the meta-package used when it pulled the
-# upstream chart directly.
+# its `.Chart.Version` stays the clean version vendir pinned even when
+# helm-controller sources THIS umbrella chart via OCIRepository (the OCI +digest
+# is appended to the umbrella version, not the subchart). The upstream image tag
+# coalesces to that `.Chart.Version`, so no explicit `kagent.tag` pin is needed
+# here -- nor the postRenderer label-sanitization hack the meta-package used when
+# it pulled the upstream chart directly.
 kagent:  # @schema additionalProperties: true
   # Pin the release-independent name so the controller Service is always
   # `kagent-controller` regardless of the umbrella release name.
@@ -26,9 +27,6 @@ kagent:  # @schema additionalProperties: true
   # override_repo_name, so the repository paths are flat, not the upstream
   # kagent-dev/kagent/* hierarchy).
   registry: gsoci.azurecr.io/giantswarm
-  # Explicit image tag matching the vendored chart version. Avoids the upstream
-  # fallback to `.Chart.Version` for the image tag.
-  tag: "0.9.12"
   controller:  # @schema additionalProperties: true
     image:  # @schema additionalProperties: true
       repository: kagent-controller

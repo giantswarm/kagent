@@ -6,4 +6,34 @@
   // overwritten on the next regeneration. Manage upstream chart-dependency
   // versions at their source instead. See #11.
   ignorePaths: ['helm/*/charts/**'],
+  packageRules: [
+    {
+      // The upstream kagent release is pinned twice in vendir.yml -- the
+      // published OCI chart (docker datasource) and the git tag the CRDs are
+      // vendored from (git-refs datasource). They are one upstream release and
+      // must move together: bumping only one ships CRDs from a different release
+      // than the controller. Ungrouped, Renovate opened them as two PRs (#41,
+      // #42) and the chart metadata was left behind on 0.9.11 -- so group them.
+      // `make sync` then propagates the pin into the chart metadata, and
+      // `make verify-version` (CI) fails if anything is left inconsistent.
+      matchPackageNames: [
+        'ghcr.io/kagent-dev/kagent/helm/kagent',
+        'https://github.com/kagent-dev/kagent',
+      ],
+      groupName: 'kagent',
+    },
+    {
+      // Never propose a kagent prerelease. Upstream tags 0.10.0-rc* and
+      // 0.10.0-beta* and marks the newest rc as the GitHub "Latest" release, and
+      // the git-refs dep resolves with semver-coerced versioning, which would
+      // otherwise read `v0.10.0-rc3` as a plain 0.10.0. The kmcp CRD pin is held
+      // to stable releases for the same reason.
+      matchPackageNames: [
+        'ghcr.io/kagent-dev/kagent/helm/kagent',
+        'https://github.com/kagent-dev/kagent',
+        'https://github.com/kagent-dev/kmcp',
+      ],
+      allowedVersions: '!/-(alpha|beta|rc)/',
+    },
+  ],
 }

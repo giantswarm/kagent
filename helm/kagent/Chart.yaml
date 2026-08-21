@@ -4,7 +4,7 @@
 apiVersion: v2
 
 # Version of the packaged app (upstream kagent release vendored as a subchart).
-appVersion: 0.9.11
+appVersion: 0.9.12
 
 # Make sure your name DOES NOT end in "app" or "-app".
 name: kagent

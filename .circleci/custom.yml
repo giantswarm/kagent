@@ -1,0 +1,29 @@
+# Repo-owned CircleCI additions. The setup workflow in .circleci/config.yml
+# deep-merges this into the generated .circleci/workflows.yml at pipeline time
+# (maps merge, lists append), so jobs added here are appended to the generated
+# `build` workflow. devctl never touches this file.
+version: 2.1
+
+jobs:
+  # `helm lint`, `helm template` and `helm package` all pass when the version
+  # strings in the chart metadata disagree with the vendored upstream tree, so a
+  # dependency bump that edits vendir.yml without running `make sync` would ship
+  # a chart that claims one upstream kagent release and contains another. This
+  # job is the gate. cimg/base already carries mikefarah yq -- no installs.
+  verify-kagent-version:
+    docker:
+    - image: cimg/base:current
+    resource_class: small
+    steps:
+    - checkout
+    - run:
+        name: Verify the vendored kagent version is consistent
+        command: make verify-version
+
+workflows:
+  build:
+    jobs:
+    - verify-kagent-version:
+        filters:
+          tags:
+            only: /^v.*/
