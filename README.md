@@ -49,6 +49,11 @@ make sync   # vendir sync + re-inject helm.sh/resource-policy: keep into crds/
 `vendir.yml`, run `make sync`, then `helm dependency update helm/kagent` and
 regenerate the schema/README via pre-commit.
 
+`make verify` (also a CircleCI job) checks the result: every kagent version string
+agrees with the `vendir.yml` pin, and every vendored CRD carries the `keep`
+annotation. A bump that runs `vendir sync` without `make sync` fails there.
+`hack/crd-keep.sh` does the injection, and `--check` is the gate.
+
 ## Version / image-tag label
 
 Wrapping the upstream chart as a subchart keeps its `.Chart.Version` at the clean

@@ -7,12 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- The vendored CRDs now carry `helm.sh/resource-policy: keep`, as `make sync` has
+  always documented. A chart uninstall no longer deletes the `kagent.dev` and
+  `kmcp` CRDs, and therefore no longer cascades into every `Agent`, `ToolServer`,
+  `RemoteMCPServer` and `MCPServer` custom resource on the cluster. The
+  annotation was dropped by a dependency bump that ran `vendir sync` on its own,
+  which restores the pristine upstream files. `make verify` now fails the build
+  when any vendored CRD is missing it. This is a metadata-only change and reaches
+  Giant Swarm installations through the existing `0.x` version range.
 - Set `appVersion` to the upstream release the chart actually vendors (`0.9.12`).
   It was left behind on `0.9.11` when the vendir pin was bumped, because nothing
   tracked or verified it.
 - The upstream kagent version is now typed in exactly one place: the `vendir.yml`
   pin that Renovate edits. `make sync` propagates it into the chart metadata, and
-  `make verify-version` -- a new CircleCI job -- fails the build when any copy
+  `make verify` -- a new CircleCI job -- fails the build when any copy
   (`vendir.lock.yml`, the vendored subchart, `appVersion`, the `file://`
   dependency, `Chart.lock`, the CRD git ref) disagrees with it. `helm lint`,
   `helm template` and `helm package` all pass on that kind of drift, so a bump
