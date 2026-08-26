@@ -6,6 +6,10 @@
 #   hack/crd-keep.sh --check      fail if absent      (run by `make verify`)
 #   hack/crd-keep.sh --self-test  test the transform  (run by `make verify`)
 #
+# Exit: 0 all good; 1 a CRD needs the annotation (--check), a CRD cannot be
+# edited, or a self-test case failed; 2 bad usage. The transform itself exits 3
+# on a document it refuses to edit.
+#
 # Helm never deletes a CRD that ships in a chart's crds/ directory, and it does
 # not read helm.sh/resource-policy there: the annotation binds resources Helm
 # tracks in the release manifest, which crds/ files are not. The annotation is
@@ -41,17 +45,25 @@ trap 'rm -rf "$tmpdir"' EXIT
 # would otherwise match any character. A line carrying the key always ends up as
 # `want`, so a wrong value is rewritten and a repeated key collapses to one line.
 # Adds the annotations block when the document has none, leaves a document that
-# already carries the annotation byte-identical, and exits 3 on a document with
-# no top-level metadata.
+# already carries the annotation byte-identical, and exits 3 rather than edit a
+# document it cannot place the line in: one with no top-level metadata, or with
+# an annotations key whose value is not a block. Appending a second
+# `annotations:` to a mapping that already has one is a duplicate key, and the
+# result is a fixed point, so --check would then report it as correct. A blank
+# line does not close either block, so it does not split the insert off from the
+# annotations that follow it.
 read -r -d '' prog <<'AWK' || true
-BEGIN { state = 0; found = 0; sawmeta = 0 }
+BEGIN { state = 0; found = 0; sawmeta = 0; bail = 0 }
+/^[[:space:]]*$/ && (state == 1 || state == 2)      { print; next }
 state == 2 && $0 !~ /^ {4}/                         { if (!found) print want; state = 0 }
 state == 1 && $0 !~ /^ {2}/                         { print "  annotations:"; print want; state = 0 }
 state == 2 && index($0, keyline) == 1               { if (!found) { print want; found = 1 } next }
 state == 1 && $0 ~ /^ {2}annotations:[[:space:]]*$/ { print; state = 2; next }
+state == 1 && $0 ~ /^ {2}annotations:/              { bail = 1; exit 3 }
 /^metadata:[[:space:]]*$/                           { print; state = 1; found = 0; sawmeta = 1; next }
 { print }
 END {
+  if (bail) exit 3
   if (state == 2 && !found) print want
   else if (state == 1) { print "  annotations:"; print want }
   if (!sawmeta) exit 3
@@ -266,6 +278,41 @@ spec:
 spec:
   group: example.com' ''
 
+  run_case "an annotations key that is not a block is not edited silently" 3 \
+'metadata:
+  annotations: {}
+  name: a.example.com
+spec:
+  group: example.com' ''
+
+  run_case "a blank line inside metadata does not split the block" 0 \
+'metadata:
+
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.19.0
+  name: a.example.com' \
+'metadata:
+
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.19.0
+    helm.sh/resource-policy: keep
+  name: a.example.com'
+
+  run_case "a blank line inside the annotations block" 0 \
+'metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.19.0
+
+    a: b
+  name: a.example.com' \
+'metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.19.0
+
+    a: b
+    helm.sh/resource-policy: keep
+  name: a.example.com'
+
   run_case "a nested metadata: key is not mistaken for the document one" 0 \
 'metadata:
   name: a.example.com
@@ -298,7 +345,10 @@ if [[ $mode == self-test ]]; then
   exit
 fi
 
-mapfile -t files < <(find "$CRD_DIR" -type f \( -name '*.yaml' -o -name '*.yml' \) | sort)
+files=()
+while IFS= read -r file; do
+  files+=("$file")
+done < <(find "$CRD_DIR" -type f \( -name '*.yaml' -o -name '*.yml' \) | sort)
 if [[ ${#files[@]} -eq 0 ]]; then
   echo "FAIL: no CRD files found under $CRD_DIR" >&2
   exit 1
