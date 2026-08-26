@@ -56,7 +56,10 @@ regenerate the schema/README via pre-commit.
 agrees with the `vendir.yml` pin, and every vendored CRD carries the `keep`
 annotation. A bump that runs `vendir sync` without `make sync` fails there.
 `hack/crd-keep.sh` does the injection, `--check` is the gate, and `--self-test`
-covers the document shapes the vendored corpus does not currently contain.
+covers the document shapes the vendored corpus does not currently contain. The
+insert is line-oriented, to keep an upstream bump to a one-line diff, so `yq`
+reads the result back and the script refuses a document it cannot annotate. It
+calls `yq` as an executable, so it needs one on `PATH` (override with `YQ=`).
 
 ## Version / image-tag label
 
