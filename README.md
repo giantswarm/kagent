@@ -43,7 +43,10 @@ make sync   # vendir sync + re-inject helm.sh/resource-policy: keep into crds/
 ```
 
 `vendir sync` overwrites `helm/kagent/crds/` with pristine upstream copies, so the
-`keep` annotation is re-injected afterwards (it is not present upstream). Requires
+`keep` annotation is re-injected afterwards (it is not present upstream). Helm never
+deletes a CRD that ships in a chart's `crds/` directory and does not read
+`helm.sh/resource-policy` there, so the annotation is defence in depth for the tools
+that do honour it, not what keeps a `helm uninstall` from removing the CRDs. Requires
 [mikefarah `yq` v4](https://github.com/mikefarah/yq) on `PATH` (override with
 `make sync YQ=/path/to/yq`). To bump the upstream version, edit the pinned refs in
 `vendir.yml`, run `make sync`, then `helm dependency update helm/kagent` and
@@ -52,7 +55,8 @@ regenerate the schema/README via pre-commit.
 `make verify` (also a CircleCI job) checks the result: every kagent version string
 agrees with the `vendir.yml` pin, and every vendored CRD carries the `keep`
 annotation. A bump that runs `vendir sync` without `make sync` fails there.
-`hack/crd-keep.sh` does the injection, and `--check` is the gate.
+`hack/crd-keep.sh` does the injection, `--check` is the gate, and `--self-test`
+covers the document shapes the vendored corpus does not currently contain.
 
 ## Version / image-tag label
 

@@ -7,14 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- The vendored CRDs now carry `helm.sh/resource-policy: keep`, as `make sync` has
-  always documented. A chart uninstall no longer deletes the `kagent.dev` and
-  `kmcp` CRDs, and therefore no longer cascades into every `Agent`, `ToolServer`,
-  `RemoteMCPServer` and `MCPServer` custom resource on the cluster. The
-  annotation was dropped by a dependency bump that ran `vendir sync` on its own,
-  which restores the pristine upstream files. `make verify` now fails the build
-  when any vendored CRD is missing it. This is a metadata-only change and reaches
-  Giant Swarm installations through the existing `0.x` version range.
+- The vendored CRDs carry `helm.sh/resource-policy: keep` again, as `make sync` and
+  the README document, and `make verify` fails when one does not. Metadata only:
+  Helm never deletes a CRD that ships in a chart's `crds/` directory, so no
+  deletion behaviour changes.
 - Set `appVersion` to the upstream release the chart actually vendors (`0.9.12`).
   It was left behind on `0.9.11` when the vendir pin was bumped, because nothing
   tracked or verified it.
