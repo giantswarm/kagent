@@ -1,6 +1,6 @@
-[![CircleCI](https://dl.circleci.com/status-badge/img/gh/giantswarm/kagent-app/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/giantswarm/kagent-app/tree/main)
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/giantswarm/kagent/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/giantswarm/kagent/tree/main)
 
-# kagent-app
+# kagent
 
 Giant Swarm packaging of the upstream [`kagent-dev/kagent`](https://github.com/kagent-dev/kagent)
 controller (a Kubernetes-native AI agent runtime). This repo vendors the upstream
@@ -8,10 +8,9 @@ app chart as a subchart and ships the kagent CRDs itself, so the app **owns its
 CRDs** — the agent-platform meta-package no longer needs the shared
 `agentic-platform-crds` bundle for kagent.
 
-> The repo follows the Giant Swarm app-repo `-app` naming (`kagent-app`), while
-> the chart is named `kagent` (matching the upstream chart and the meta-package
-> component) — chart names must not end in `-app`. The plain `kagent` repo name is
-> the Giant Swarm code fork of the controller.
+> The repo and the chart are both named `kagent`, matching the upstream chart and
+> the meta-package component. The Giant Swarm fork of the upstream controller lives
+> at [`giantswarm/kagent-upstream`](https://github.com/giantswarm/kagent-upstream).
 
 ## Layout
 
