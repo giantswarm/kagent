@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- The vendored CRDs carry `helm.sh/resource-policy: keep` again, as `make sync` and
+  the README document, and `make verify` fails when one does not. Metadata only:
+  Helm never deletes a CRD that ships in a chart's `crds/` directory, so no
+  deletion behaviour changes.
 - Repository renamed from `kagent-app` to `kagent`; chart name and OCI
   coordinates unchanged.
 - Set `appVersion` to the upstream release the chart actually vendors (`0.9.12`).
@@ -14,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   tracked or verified it.
 - The upstream kagent version is now typed in exactly one place: the `vendir.yml`
   pin that Renovate edits. `make sync` propagates it into the chart metadata, and
-  `make verify-version` -- a new CircleCI job -- fails the build when any copy
+  `make verify` -- a new CircleCI job -- fails the build when any copy
   (`vendir.lock.yml`, the vendored subchart, `appVersion`, the `file://`
   dependency, `Chart.lock`, the CRD git ref) disagrees with it. `helm lint`,
   `helm template` and `helm package` all pass on that kind of drift, so a bump

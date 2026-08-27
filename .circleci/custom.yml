@@ -6,24 +6,26 @@ version: 2.1
 
 jobs:
   # `helm lint`, `helm template` and `helm package` all pass when the version
-  # strings in the chart metadata disagree with the vendored upstream tree, so a
-  # dependency bump that edits vendir.yml without running `make sync` would ship
-  # a chart that claims one upstream kagent release and contains another. This
-  # job is the gate. cimg/base already carries mikefarah yq -- no installs.
-  verify-kagent-version:
+  # strings in the chart metadata disagree with the vendored upstream tree, and
+  # when the vendored CRDs have lost `helm.sh/resource-policy: keep`. A dependency
+  # bump that edits vendir.yml and runs `vendir sync` without `make sync` produces
+  # both: a chart that claims one upstream kagent release and contains another,
+  # and CRDs that no longer carry an annotation the README promises. This job is
+  # the gate. cimg/base already carries mikefarah yq -- no installs.
+  verify-vendored-tree:
     docker:
     - image: cimg/base:current
     resource_class: small
     steps:
     - checkout
     - run:
-        name: Verify the vendored kagent version is consistent
-        command: make verify-version
+        name: Verify the vendored kagent tree
+        command: make verify
 
 workflows:
   build:
     jobs:
-    - verify-kagent-version:
+    - verify-vendored-tree:
         filters:
           tags:
             only: /^v.*/

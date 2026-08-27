@@ -15,7 +15,7 @@
       // than the controller. Ungrouped, Renovate opened them as two PRs (#41,
       // #42) and the chart metadata was left behind on 0.9.11 -- so group them.
       // `make sync` then propagates the pin into the chart metadata, and
-      // `make verify-version` (CI) fails if anything is left inconsistent.
+      // `make verify` (CI) fails if anything is left inconsistent.
       matchPackageNames: [
         'ghcr.io/kagent-dev/kagent/helm/kagent',
         'https://github.com/kagent-dev/kagent',
