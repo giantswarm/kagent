@@ -2,11 +2,11 @@
 
 Giant Swarm packaging of the upstream kagent-dev/kagent controller (Kubernetes-native AI agent runtime). The upstream app chart is vendored as a subchart; the kagent.dev and kmcp CRDs ship in this chart's crds/ directory so the app owns its CRDs (delivered via Flux CreateReplace).
 
-**Homepage:** <https://github.com/giantswarm/kagent-app>
+**Homepage:** <https://github.com/giantswarm/kagent>
 
 ## Source Code
 
-* <https://github.com/giantswarm/kagent-app>
+* <https://github.com/giantswarm/kagent>
 * <https://github.com/kagent-dev/kagent>
 
 ## Requirements
