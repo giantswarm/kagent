@@ -13,14 +13,14 @@ name: kagent
 description: Giant Swarm packaging of the upstream kagent-dev/kagent controller (Kubernetes-native AI agent runtime). The upstream app chart is vendored as a subchart; the kagent.dev and kmcp CRDs ship in this chart's crds/ directory so the app owns its CRDs (delivered via Flux CreateReplace).
 
 # URL of the GitHub repository that is the source of this Chart.yaml file.
-home: https://github.com/giantswarm/kagent-app
+home: https://github.com/giantswarm/kagent
 
 # If you have an icon/logo, you should add it to https://github.com/giantswarm/web-assets
 # and set the final URL here.
 icon: https://s.giantswarm.io/app-icons/giantswarm/1/light.svg
 
 sources:
-- https://github.com/giantswarm/kagent-app
+- https://github.com/giantswarm/kagent
 - https://github.com/kagent-dev/kagent
 version: 0.0.0-dev
 annotations:

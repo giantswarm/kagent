@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the README document, and `make verify` fails when one does not. Metadata only:
   Helm never deletes a CRD that ships in a chart's `crds/` directory, so no
   deletion behaviour changes.
+- Repository renamed from `kagent-app` to `kagent`; chart name and OCI
+  coordinates unchanged.
 - Set `appVersion` to the upstream release the chart actually vendors (`0.9.12`).
   It was left behind on `0.9.11` when the vendir pin was bumped, because nothing
   tracked or verified it.
@@ -44,4 +46,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in `helm/kagent/crds/` with `helm.sh/resource-policy: keep`, delivered via Flux
   `crds: CreateReplace` from the agentic-platform meta-package.
 
-[Unreleased]: https://github.com/giantswarm/kagent-app/tree/main
+[Unreleased]: https://github.com/giantswarm/kagent/tree/main
