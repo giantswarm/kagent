@@ -9,6 +9,9 @@ data:
   A2A_BASE_URL: {{ include "kagent.a2aBaseUrl" . | quote }}
   DEFAULT_MODEL_CONFIG_NAME: {{ include "kagent.defaultModelConfigName" . | quote }}
   KAGENT_CONTROLLER_NAME: {{ include "kagent.fullname" . }}-controller
+  {{- if .Values.ui.externalUrl }}
+  KAGENT_UI_URL: {{ .Values.ui.externalUrl | quote }}
+  {{- end }}
   IMAGE_PULL_POLICY: {{ .Values.controller.agentImage.pullPolicy | default .Values.imagePullPolicy | quote }}
   {{- if and .Values.controller.agentImage.pullSecret (not (eq .Values.controller.agentImage.pullSecret "")) }}
   IMAGE_PULL_SECRET: {{ .Values.controller.agentImage.pullSecret | quote }}
@@ -20,6 +23,10 @@ data:
   SKILLS_INIT_IMAGE_REGISTRY: {{ .Values.controller.skillsInitImage.registry | default .Values.registry | quote }}
   SKILLS_INIT_IMAGE_REPOSITORY: {{ .Values.controller.skillsInitImage.repository | quote }}
   SKILLS_INIT_IMAGE_TAG: {{ coalesce .Values.controller.skillsInitImage.tag .Values.tag .Chart.Version | quote }}
+  GO_IMAGE_PULL_POLICY: {{ .Values.controller.goAgentImage.pullPolicy | default .Values.imagePullPolicy | quote }}
+  GO_IMAGE_REGISTRY: {{ .Values.controller.goAgentImage.registry | default .Values.registry | quote }}
+  GO_IMAGE_REPOSITORY: {{ .Values.controller.goAgentImage.repository | quote }}
+  GO_IMAGE_TAG: {{ coalesce .Values.controller.goAgentImage.tag .Values.tag .Chart.Version | quote }}
   LEADER_ELECT: {{ include "kagent.leaderElectionEnabled" . | quote }}
   # OpenTelemetry Configuration
   OTEL_TRACING_ENABLED: {{ .Values.otel.tracing.enabled | quote }}
@@ -52,8 +59,28 @@ data:
   PROXY_URL: {{ .Values.proxy.url | quote }}
   {{- end }}
   DATABASE_VECTOR_ENABLED: {{ .Values.database.postgres.vectorEnabled | quote }}
+  SKIP_MIGRATIONS: {{ .Values.database.postgres.skipMigrations | default false | quote }}
+  {{- with .Values.database.postgres.pool }}
+  {{- if and (hasKey . "maxConns") (ne .maxConns nil) }}
+  DB_MAX_CONNS: {{ .maxConns | quote }}
+  {{- end }}
+  {{- if and (hasKey . "minConns") (ne .minConns nil) }}
+  DB_MIN_CONNS: {{ .minConns | quote }}
+  {{- end }}
+  {{- if .maxConnIdleTime }}
+  DB_MAX_CONN_IDLE_TIME: {{ .maxConnIdleTime | quote }}
+  {{- end }}
+  {{- if .maxConnLifetime }}
+  DB_MAX_CONN_LIFETIME: {{ .maxConnLifetime | quote }}
+  {{- end }}
+  {{- end }}
+  SESSION_RETENTION_DAYS: {{ .Values.database.postgres.sessionRetentionDays | default 0 | quote }}
   WATCH_NAMESPACES: {{ include "kagent.watchNamespaces" . | quote }}
   MCP_EGRESS_PLAINTEXT: {{ .Values.controller.mcpEgressPlaintext | default false | quote }}
+  TOOL_REFRESH_INTERVAL: {{ .Values.controller.toolRefreshInterval | default "60s" | quote }}
+  {{- if .Values.controller.a2aClientTimeout }}
+  KAGENT_A2A_CLIENT_TIMEOUT: {{ .Values.controller.a2aClientTimeout | quote }}
+  {{- end }}
   ZAP_LOG_LEVEL: {{ .Values.controller.loglevel | quote }}
   {{- $agentHost := "" }}
   {{- if and .Values.controller.agentDeployment .Values.controller.agentDeployment.host (not (eq .Values.controller.agentDeployment.host "")) }}
@@ -74,5 +101,14 @@ data:
   {{- end }}
   {{- if $pairs }}
   DEFAULT_AGENT_POD_LABELS: {{ join "," $pairs | quote }}
+  {{- end }}
+  {{- end }}
+  {{- if and .Values.controller.agentDeployment .Values.controller.agentDeployment.nodeSelector }}
+  {{- $nsPairs := list }}
+  {{- range $k := keys .Values.controller.agentDeployment.nodeSelector | sortAlpha }}
+  {{- $nsPairs = append $nsPairs (printf "%s=%s" $k (index $.Values.controller.agentDeployment.nodeSelector $k | toString)) }}
+  {{- end }}
+  {{- if $nsPairs }}
+  DEFAULT_AGENT_NODE_SELECTOR: {{ join "," $nsPairs | quote }}
   {{- end }}
   {{- end }}

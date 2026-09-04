@@ -89,6 +89,44 @@ Guards on the rbac block
 {{- end -}}
 
 {{/*
+Returns "1" when a PodDisruptionBudget threshold is explicitly set, empty otherwise.
+
+Uses `kindIs "invalid"` rather than `default ""` so that an explicit `0` counts as
+set: Helm's `default` treats 0 as empty, which would silently drop a
+`maxUnavailable: 0` budget and render a manifest the user never asked for.
+An empty string is also treated as unset, so `minAvailable: ""` disables the field.
+*/}}
+{{- define "kagent.pdb.isSet" -}}
+{{- if not (kindIs "invalid" .) -}}
+{{- if ne (toString .) "" -}}1{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Guards on a component `pdb` block.
+
+Kubernetes rejects a PodDisruptionBudget that sets both `minAvailable` and
+`maxUnavailable`, and a budget that sets neither is meaningless, so both cases
+fail at template time with a message naming the offending values path rather
+than surfacing later as an opaque API server error.
+
+Call with a dict: (dict "pdb" .Values.controller.pdb "path" "controller.pdb")
+*/}}
+{{- define "kagent.pdb.validate" -}}
+{{- $pdb := .pdb | default dict -}}
+{{- if $pdb.enabled -}}
+{{- $hasMin := include "kagent.pdb.isSet" $pdb.minAvailable -}}
+{{- $hasMax := include "kagent.pdb.isSet" $pdb.maxUnavailable -}}
+{{- if and $hasMin $hasMax -}}
+{{- fail (printf "%s: minAvailable and maxUnavailable are mutually exclusive. Set exactly one (to use minAvailable, set %s.maxUnavailable=null)." .path .path) -}}
+{{- end -}}
+{{- if not (or $hasMin $hasMax) -}}
+{{- fail (printf "%s is enabled but neither minAvailable nor maxUnavailable is set. Set exactly one." .path) -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 UI selector labels
 */}}
 {{- define "kagent.ui.selectorLabels" -}}
@@ -182,7 +220,8 @@ Bundled PostgreSQL image - constructs the full image reference from registry/rep
 */}}
 {{- define "kagent.postgresql.image" -}}
 {{- $pg := .Values.database.postgres.bundled -}}
-{{- printf "%s/%s/%s:%s" $pg.image.registry $pg.image.repository $pg.image.name $pg.image.tag -}}
+{{- $parts := compact (list $pg.image.registry $pg.image.repository $pg.image.name) -}}
+{{- printf "%s:%s" (join "/" $parts) $pg.image.tag -}}
 {{- end -}}
 
 {{/*
@@ -193,13 +232,14 @@ Password secret name - returns the chart-managed Secret name for POSTGRES_PASSWO
 {{- end -}}
 
 {{/*
-A2A Base URL - computes the default URL based on the controller service name if not explicitly set
+A2A Base URL - computes the default URL based on the controller service name if not explicitly set.
+The `name.namespace.svc` short form is used so the URL resolves regardless of the cluster's DNS domain.
 */}}
 {{- define "kagent.a2aBaseUrl" -}}
 {{- if .Values.controller.a2aBaseUrl -}}
 {{- .Values.controller.a2aBaseUrl -}}
 {{- else -}}
-{{- printf "http://%s-controller.%s.svc.cluster.local:%d" (include "kagent.fullname" .) (include "kagent.namespace" .) (.Values.controller.service.ports.port | int) -}}
+{{- printf "http://%s-controller.%s.svc:%d" (include "kagent.fullname" .) (include "kagent.namespace" .) (.Values.controller.service.ports.port | int) -}}
 {{- end -}}
 {{- end -}}
 
@@ -207,7 +247,7 @@ A2A Base URL - computes the default URL based on the controller service name if 
 Controller Service host:port for nginx upstream (no scheme).
 */}}
 {{- define "kagent.controllerServiceAuthority" -}}
-{{- printf "%s-controller.%s.svc.cluster.local:%d" (include "kagent.fullname" .) (include "kagent.namespace" .) (.Values.controller.service.ports.port | int) -}}
+{{- printf "%s-controller.%s.svc:%d" (include "kagent.fullname" .) (include "kagent.namespace" .) (.Values.controller.service.ports.port | int) -}}
 {{- end -}}
 
 {{/*
@@ -229,3 +269,27 @@ imagePullSecrets:
 {{- end -}}
 {{- end -}}
 
+{{/*
+Body of oauth2-proxy's custom sign_in.html template (see
+templates/oauth2-proxy-templates.yaml). Kept as its own named template, rather
+than inline in that ConfigMap, so oauth2-proxy.extraEnv in values.yaml can hash
+the content.
+
+oauth2-proxy renders this as its own Go html/template (not a Helm template) when
+it shows the sign-in page to an unauthenticated visitor -- e.g. a request to
+/agents/foo is served this page at /oauth2/sign_in?rd=%2Fagents%2Ffoo.
+`Redirect` is oauth2-proxy's template variable carrying that original
+destination (escaped with a Helm string-literal action so Helm emits it for
+oauth2-proxy to evaluate, instead of trying to evaluate it itself). It is
+forwarded to kagent's branded /login page.
+*/}}
+{{- define "kagent.oauth2ProxySignInHTML" -}}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="refresh" content="0;url=/login?rd={{ "{{" }} or .Redirect "/" | urlquery {{ "}}" }}">
+  <script>window.location.href = "/login?rd={{ "{{" }} or .Redirect "/" | urlquery {{ "}}" }}";</script>
+</head>
+<body>Redirecting to login...</body>
+</html>
+{{- end -}}

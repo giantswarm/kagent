@@ -15,7 +15,7 @@ ipv6:
   enabled: false
 
 tag: ""
-registry: "cr.kagent.dev"
+registry: "ghcr.io"
 
 imagePullSecrets: []
 imagePullPolicy: IfNotPresent
@@ -27,7 +27,15 @@ fullnameOverride: ""
 # @default -- `.Release.Namespace`
 namespaceOverride: ""
 
+# -- Additional annotations to add to all Kubernetes deployment resources
+annotations: {}
+
 podAnnotations: {}
+
+# -- Additional labels to add to all pod templates (merged into pod labels of
+# the controller and UI Deployments; can be overridden per component).
+# Useful for admission policies that require specific labels on pods.
+podLabels: {}
 
 # -- Additional labels to add to all Kubernetes resources
 labels: {}
@@ -76,6 +84,21 @@ database:
     # Required to use features that depend on database vector capability. (e.g. long-term memory)
     # Set to true when using an external PostgreSQL that has the pgvector extension installed.
     vectorEnabled: false
+    # -- Skip running database migrations at controller startup.
+    # The controller instead verifies the database is already migrated and fails if it is not.
+    # Migrations must be applied out-of-band (e.g. from a CI/CD pipeline) before install/upgrade.
+    skipMigrations: false
+    # -- Optional pgxpool settings. Leave unset/null to keep pgx library defaults
+    # (MaxConns≈max(4,NumCPU), MinConns=0, MaxConnIdleTime=30m, MaxConnLifetime=1h).
+    pool:
+      maxConns: null
+      minConns: null
+      maxConnIdleTime: ""
+      maxConnLifetime: ""
+    # -- Hard-delete idle sessions (and cascaded events/tasks/checkpoints/shares) after N days
+    # of no activity. Uses session.updated_at as a sliding idle clock (writes refresh it).
+    # 0 disables cleanup (default, existing installs unchanged).
+    sessionRetentionDays: 0
     # -- Bundled PostgreSQL instance — for development and evaluation only.
     # Not suitable for production. Deployed when enabled is true and url/urlFile are not set.
     bundled:
@@ -89,7 +112,7 @@ database:
         # -- Bundled PostgreSQL image name
         name: postgres
         # -- Bundled PostgreSQL image tag
-        tag: "18.3-alpine"
+        tag: "18.6-alpine3.23"
         # -- Bundled PostgreSQL image pull policy
         pullPolicy: IfNotPresent
       # -- PersistentVolumeClaim size for demo PostgreSQL data
@@ -139,6 +162,12 @@ rbac:
 # ==============================================================================
 
 controller:
+  # -- ServiceAccount settings for the controller pod
+  serviceAccount:
+    # -- Annotations to add to the controller ServiceAccount.
+    # Useful for GCP Workload Identity, AWS IRSA, or Azure Workload Identity.
+    # @default -- {} (no extra annotations)
+    annotations: {}
   replicas: 1
   loglevel: "info"
   # Authentication mode: "unsecure" (default) or "trusted-proxy"
@@ -167,6 +196,15 @@ controller:
     #   podLabels:
     #     team: platform
     #     environment: production
+    # -- Default nodeSelector applied to all agent deployments.
+    # Useful when admission policies require a nodeSelector on every
+    # Deployment, since wizard-created Agents carry none. A per-agent
+    # nodeSelector in the Agent CRD takes precedence over these defaults.
+    # @default -- {} (no default nodeSelector)
+    nodeSelector: {}
+    # Example:
+    #   nodeSelector:
+    #     kubernetes.io/os: linux
     # -- Default host address for agent pods to bind to.
     # Leave empty to use the controller's default fallback of "0.0.0.0".
     # Automatically set to "::" when ipv6.enabled is true.
@@ -174,22 +212,40 @@ controller:
     # @default -- "" (controller falls back to "0.0.0.0"; "::" when ipv6.enabled)
     host: ""
   # -- The base URL of the A2A Server endpoint, as advertised to clients.
-  # @default -- `http://<fullname>-controller.<namespace>.svc.cluster.local:<port>`
+  # @default -- `http://<fullname>-controller.<namespace>.svc:<port>`
   a2aBaseUrl: ""
   agentImage:
     registry: ""
     repository: kagent-dev/kagent/app
     tag: "" # Will default to global, then Chart version
     pullPolicy: ""
+    # -- Image pull secret name set on agent pods created by the controller
+    pullSecret: ""
   # -- The image used by the skills-init container to clone skills from Git and pull OCI skill images.
   skillsInitImage:
     registry: ""
     repository: kagent-dev/kagent/skills-init
     tag: "" # Will default to global, then Chart version
     pullPolicy: ""
+  # -- The image used for the Go (ADK) runtime agent.
+  goAgentImage:
+    registry: ""
+    repository: kagent-dev/kagent/golang-adk
+    tag: "" # Will default to global, then Chart version
+    pullPolicy: ""
   # -- @deprecated Removed in 0.10.0. The A2A SDK now handles SSE buffering and timeouts
   # internally. These values have no effect and will be removed in a future release.
   streaming: null
+
+  # -- HTTP client timeout for A2A requests from the controller to agent pods.
+  # 0 (the default) means no timeout, which is correct for SSE-based streaming agents
+  # that can run for an arbitrarily long time. The previous implicit default was 3m
+  # (inherited from the a2a-go SDK), which caused `context deadline exceeded` errors
+  # for agents that take longer than 3 minutes to complete.
+  # Set a positive Go duration string (e.g. "30m", "1h") only if you need a hard
+  # upper bound on individual A2A calls.
+  # @default -- "" (no timeout)
+  a2aClientTimeout: ""
 
   # -- Namespaces the controller should watch.
   # If empty, the controller will watch ALL available namespaces.
@@ -204,13 +260,58 @@ controller:
   # off by default.
   mcpEgressPlaintext: false
 
+  # -- How often MCP tool-discovery controllers requeue to refresh the
+  # discovered-tool cache (RemoteMCPServer, MCPServer, labeled MCP Service).
+  # Default 60s.
+  toolRefreshInterval: "60s"
+
+  # -- Additional annotations to add to the controller Deployment metadata
+  annotations: {}
+
   podAnnotations: {}
+
+  # -- Additional labels for the controller pod template, merged over the
+  # global `podLabels` (per-key; component keys win). Selector labels can
+  # never be overridden.
+  podLabels: {}
 
   # -- Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).
   tolerations: []
 
   # -- Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).
   nodeSelector: {}
+
+  # -- [Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity) rules for the controller pod.
+  affinity: {}
+
+  # -- [Topology spread constraints](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#pod-topology-spread-constraints) for the controller pod.
+  topologySpreadConstraints: []
+
+  # -- [PodDisruptionBudget](https://kubernetes.io/docs/tasks/run-application/configure-pdb/)
+  # for the controller pods. Disabled by default: `controller.replicas` is 1, and a
+  # `minAvailable: 1` budget on a single-replica Deployment blocks every voluntary
+  # eviction, so node drains and cluster upgrades hang indefinitely. Raise
+  # `controller.replicas` before switching to `minAvailable`.
+  pdb:
+    # -- Set to true to create the PodDisruptionBudget.
+    enabled: false
+    # -- Minimum number of pods that must remain available. Int or percentage string
+    # (e.g. `1` or `"50%"`). Mutually exclusive with `maxUnavailable`.
+    # @default -- unset (`maxUnavailable` is used instead)
+    minAvailable: null
+    # -- Maximum number of pods that may be unavailable. Int or percentage string
+    # (e.g. `1` or `"50%"`). Mutually exclusive with `minAvailable`.
+    maxUnavailable: 1
+    # -- `spec.unhealthyPodEvictionPolicy`, one of `IfHealthyBudget` (the Kubernetes
+    # default) or `AlwaysAllow`. `AlwaysAllow` lets unhealthy pods be evicted even when
+    # the budget is exhausted, which avoids drains wedging on a crash-looping pod.
+    # Requires Kubernetes >= 1.27. Omitted from the manifest when empty.
+    # @default -- "" (defer to the Kubernetes default)
+    unhealthyPodEvictionPolicy: ""
+    # -- Additional labels for the controller PodDisruptionBudget.
+    labels: {}
+    # -- Annotations for the controller PodDisruptionBudget.
+    annotations: {}
 
   image:
     registry: ""
@@ -229,6 +330,7 @@ controller:
     ports:
       port: 8083
       targetPort: 8083
+    annotations: {}
   # -- Prometheus-style /metrics endpoint for the controller manager.
   # When enabled, provisions a dedicated metrics Service plus the
   # ClusterRoles required for authenticated scrapes. Bind
@@ -250,13 +352,8 @@ controller:
       type: ClusterIP
       port: 8443
 
-  # Extra controller env (mapped to flags via SUBSTRATE_* / OPENSHELL_* env names).
-  # OpenShell AgentHarness: set OPENSHELL_GATEWAY_URL (or leave defaults below).
-  env:
-    # - name: OPENSHELL_GATEWAY_URL
-    #   value: openshell.openshell.svc.cluster.local:8080
-    # - name: OPENSHELL_INSECURE
-    #   value: "true"
+  # Extra controller env (mapped to flags via SUBSTRATE_* env names).
+  env: []
 
   # Agent Substrate (OpenClaw harness runtime=substrate). Requires ate-system installed.
   # kagent generates per-harness ActorTemplates and references an existing WorkerPool.
@@ -276,10 +373,6 @@ controller:
       namespace: ""
       name: ""
     # pauseImage: "gcr.io/gke-release/pause@sha256:bcbd57ba5653580ec647b16d8163cdd1112df3609129b01f912a8032e48265da"
-    # runscAMD64URL: "gs://gvisor/releases/nightly/2026-06-02/x86_64/runsc"
-    # runscAMD64SHA256: "efd12935f6654c91a1389710eb8dfa4d12b6b9be00db87526dc2eb584ad00119"
-    # runscARM64URL: "gs://gvisor/releases/nightly/2026-05-19/aarch64/runsc"
-    # runscARM64SHA256: "1ba2366ae2efceba166046f51a4104f9261c9cb72c6db8f5b3fe2dc57dea86b9"
     # Example when enabled:
     #   enabled: true
     #   ateApiEndpoint: "dns:///api.ate-system.svc:443"
@@ -320,12 +413,35 @@ substrateWorkerPool:
   name: kagent-default
   replicas: 1
   ateomImage: ""
+  # sandboxClass selects the sandbox runtime family (gvisor|microvm). kagent-generated
+  # ActorTemplates currently hardcode gvisor; set this to gvisor until microvm is supported.
+  sandboxClass: gvisor
+  # Extra labels merged onto the WorkerPool metadata (in addition to the
+  # kagent.dev/worker-pool label used by generated ActorTemplates to select this pool).
+  labels: {}
+  # Optional pod scheduling/resources for worker pods (WorkerPool.spec.template).
+  # nodeSelector / tolerations / priorityClassName / nodeAffinity / resources.
+  template: {}
 
 # ==============================================================================
 # UI CONFIGURATION
 # ==============================================================================
 
 ui:
+  # -- ServiceAccount settings for the UI pod
+  serviceAccount:
+    # -- Annotations to add to the UI ServiceAccount.
+    # Useful for GCP Workload Identity, AWS IRSA, or Azure Workload Identity.
+    # @default -- {} (no extra annotations)
+    annotations: {}
+  # -- Additional annotations to add to the UI Deployment metadata
+  annotations: {}
+
+  # -- Public-facing base URL of the UI (e.g. https://kagent.example.com).
+  # When set, the controller injects KAGENT_UI_URL into agent pods so that
+  # share link tools return full clickable URLs instead of relative paths.
+  # @default -- "" (share tools return paths only)
+  externalUrl: ""
   replicas: 1
   image:
     registry: ""
@@ -397,11 +513,49 @@ ui:
 
   podAnnotations: {}
 
+  # -- Additional labels for the UI pod template, merged over the
+  # global `podLabels` (per-key; component keys win). Selector labels can
+  # never be overridden.
+  podLabels: {}
+
   # -- Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).
   tolerations: []
 
   # -- Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).
   nodeSelector: {}
+
+  # -- [Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity) rules for the UI pod.
+  affinity: {}
+
+  # -- [Topology spread constraints](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#pod-topology-spread-constraints) for the UI pod.
+  topologySpreadConstraints: []
+
+  # -- [PodDisruptionBudget](https://kubernetes.io/docs/tasks/run-application/configure-pdb/)
+  # for the UI pods. Disabled by default: `ui.replicas` is 1, and a `minAvailable: 1`
+  # budget on a single-replica Deployment blocks every voluntary eviction, so node
+  # drains and cluster upgrades hang indefinitely. Raise `ui.replicas` before
+  # switching to `minAvailable`.
+  pdb:
+    # -- Set to true to create the PodDisruptionBudget.
+    enabled: false
+    # -- Minimum number of pods that must remain available. Int or percentage string
+    # (e.g. `1` or `"50%"`). Mutually exclusive with `maxUnavailable`.
+    # @default -- unset (`maxUnavailable` is used instead)
+    minAvailable: null
+    # -- Maximum number of pods that may be unavailable. Int or percentage string
+    # (e.g. `1` or `"50%"`). Mutually exclusive with `minAvailable`.
+    maxUnavailable: 1
+    # -- `spec.unhealthyPodEvictionPolicy`, one of `IfHealthyBudget` (the Kubernetes
+    # default) or `AlwaysAllow`. `AlwaysAllow` lets unhealthy pods be evicted even when
+    # the budget is exhausted, which avoids drains wedging on a crash-looping pod.
+    # Requires Kubernetes >= 1.27. Omitted from the manifest when empty.
+    # @default -- "" (defer to the Kubernetes default)
+    unhealthyPodEvictionPolicy: ""
+    # -- Additional labels for the UI PodDisruptionBudget.
+    labels: {}
+    # -- Annotations for the UI PodDisruptionBudget.
+    annotations: {}
+
   # -- Custom startup probe for the UI container.
   # Override to adjust thresholds, use exec-based probes, or change the health path.
   # @default -- httpGet /health on port http, periodSeconds=1, initialDelaySeconds=1
@@ -430,13 +584,51 @@ ui:
   # oauth2-proxy instead of the chart's edge-terminated Route.
   route:
     enabled: true
-  
+
   # OpenShift Route only (when route.openshift.io/v1 exists). Long timeouts are required
   # for A2A/SSE streaming through the cluster router; defaults are often ~60s and cause
   # net::ERR_INCOMPLETE_CHUNKED_ENCODING in the browser.
   openshiftRoute:
     annotations:
       haproxy.router.openshift.io/timeout: 120m
+
+  # -- Gateway API `HTTPRoute` for the UI. Requires the Gateway API CRDs
+  # (`gateway.networking.k8s.io/v1`) and an existing `Gateway` to attach to via
+  # `parentRefs`. Disabled by default; enable to front the UI with a Gateway API
+  # implementation (kgateway, Istio, Envoy Gateway, etc.) instead of the
+  # OpenShift Route or bundled oauth2-proxy.
+  httpRoute:
+    enabled: false
+    # -- Extra labels to add to the `HTTPRoute` (merged with the chart labels).
+    labels: {}
+    # -- Annotations to add to the `HTTPRoute`.
+    annotations: {}
+    # -- Gateways this route attaches to. Required when `enabled` is `true`.
+    parentRefs: []
+    #   - name: my-gateway
+    #     namespace: gateway-system
+    #     sectionName: https
+    # -- Hostnames matched by the route.
+    hostnames: []
+    #   - kagent.example.com
+    # -- Routing rules. When a rule omits `backendRefs`, it defaults to the UI
+    # `Service` on `ui.service.ports.port`. Each rule may also set `matches`,
+    # `filters`, and `timeouts`.
+    rules: []
+    #   - matches:
+    #       - path:
+    #           type: PathPrefix
+    #           value: /
+    #     filters:
+    #       - type: RequestHeaderModifier
+    #         requestHeaderModifier:
+    #           set:
+    #             - name: X-Forwarded-Proto
+    #               value: https
+    #     timeouts:
+    #       request: "0s"
+    #       backendRequest: "0s"
+
 # ==============================================================================
 # LLM PROVIDERS CONFIGURATION
 # ==============================================================================
@@ -444,6 +636,9 @@ ui:
 
 providers:
   default: openAI
+  # -- Annotations added to the metadata of the generated default ModelConfig
+  # (the one derived from `providers.default`). Omitted from the resource when empty.
+  annotations: {}
   openAI:
     provider: OpenAI
     model: "gpt-4.1-mini"
@@ -514,6 +709,10 @@ kagent-tools:
   enabled: true
   nameOverride: tools
   replicaCount: 1
+  # -- Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).
+  tolerations: []
+  # -- Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).
+  nodeSelector: {}
   podSecurityContext:
     runAsNonRoot: true
     seccompProfile:
@@ -704,25 +903,6 @@ grafana-mcp:
       cpu: 500m
       memory: 512Mi
 
-querydoc:
-  enabled: true
-  replicas: 1
-  image:
-    registry: ghcr.io
-    repository: kagent-dev/doc2vec/mcp
-    tag: 1.1.14
-    pullPolicy: IfNotPresent
-  resources:
-    requests:
-      cpu: 100m
-      memory: 128Mi
-    limits:
-      cpu: 500m
-      memory: 512Mi
-  openai:
-    apiKey: ""
-    # secretRef: ""  # Name of existing Secret containing OPENAI_API_KEY. Takes precedence over apiKey.
-
 # ==============================================================================
 # OAUTH2-PROXY CONFIGURATION (Optional)
 # ==============================================================================
@@ -732,9 +912,8 @@ querydoc:
 oauth2-proxy:
   enabled: false
 
-  # Disable Redis - use cookie-based sessions
-  redis:
-    enabled: false
+  # Cookie-based sessions (the redis-ha sub-chart is disabled by default;
+  # enable `redis-ha.enabled` + `sessionStorage.type: redis` to switch)
   sessionStorage:
     type: cookie
 
@@ -780,6 +959,9 @@ oauth2-proxy:
   # Cluster-specific OIDC settings - override these per deployment
   # These are set as env vars and referenced in args for easy patching
   extraEnv:
+    # Forces a rollout whenever the sign_in.html ConfigMap's content changes.
+    - name: KAGENT_OAUTH2_PROXY_SIGNIN_TEMPLATE_CHECKSUM
+      value: '{{ include "kagent.oauth2ProxySignInHTML" . | sha256sum }}'
     - name: OIDC_ISSUER_URL
       value: ""
     - name: OIDC_REDIRECT_URL
@@ -838,3 +1020,35 @@ otel:
         endpoint: ""
         timeout: 15000 # milliseconds
         insecure: true
+
+# ==============================================================================
+# EXTRA OBJECTS
+# ==============================================================================
+
+# -- Additional arbitrary Kubernetes manifests to deploy alongside the chart.
+# Each list entry is rendered through `tpl`, so values may reference the release
+# context (e.g. `{{ include "kagent.fullname" . }}`, `{{ .Release.Namespace }}`).
+# Both map and multi-line string entries are supported. Use this to manage
+# resources such as ExternalSecret, HTTPRoute, or NetworkPolicy within the same
+# chart lifecycle without maintaining a separate chart.
+#
+# To use, replace the empty list below with your manifests, e.g.:
+#   extraObjects:
+#     - apiVersion: external-secrets.io/v1
+#       kind: ExternalSecret
+#       metadata:
+#         name: '{{ include "kagent.fullname" . }}-openai'
+#         namespace: '{{ .Release.Namespace }}'
+#       spec:
+#         secretStoreRef:
+#           name: aws-secretsmanager
+#           kind: ClusterSecretStore
+#         target:
+#           name: kagent-openai
+#         data:
+#           - secretKey: OPENAI_API_KEY
+#             remoteRef:
+#               key: prod/kagent/openai
+#               property: api_key
+# @default -- []
+extraObjects: []

@@ -44,7 +44,7 @@ app.kubernetes.io/part-of: {{ template "oauth2-proxy.name" . }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 {{- if .Values.customLabels }}
-{{ toYaml .Values.customLabels }}
+{{ tpl (toYaml .Values.customLabels) $ }}
 {{- end }}
 {{- end }}
 
@@ -61,7 +61,7 @@ Get the secret name.
 */}}
 {{- define "oauth2-proxy.secretName" -}}
 {{- if .Values.config.existingSecret -}}
-{{- printf "%s" .Values.config.existingSecret -}}
+{{- printf "%s" (tpl .Values.config.existingSecret $) -}}
 {{- else -}}
 {{- printf "%s" (include "oauth2-proxy.fullname" .) -}}
 {{- end -}}
@@ -90,11 +90,19 @@ Allow the release namespace to be overridden for multi-namespace deployments in 
 {{- end -}}
 
 {{/*
+Redis subchart enabled check
+*/}}
+{{- define "oauth2-proxy.redis.enabled" -}}
+  {{- eq (index .Values "redis-ha" "enabled") true -}}
+{{- end -}}
+
+{{/*
 Redis subcharts fullname
 */}}
 {{- define "oauth2-proxy.redis.fullname" -}}
-{{- if .Values.redis.enabled -}}
-{{- include "common.names.fullname" (dict "Chart" (dict "Name" "redis") "Release" .Release "Values" .Values.redis) -}}
+{{- if eq (include "oauth2-proxy.redis.enabled" .) "true" -}}
+{{- $redisValues := index .Values "redis-ha" | default dict -}}
+{{- include "redis-ha.fullname" (dict "Chart" (dict "Name" "redis-ha") "Release" .Release "Values" $redisValues) -}}
 {{- else -}}
 {{ fail "attempting to use redis subcharts fullname, even though the subchart is not enabled. This will lead to misconfiguration" }}
 {{- end -}}
@@ -106,10 +114,11 @@ Compute the redis url if not set explicitly.
 {{- define "oauth2-proxy.redis.StandaloneUrl" -}}
 {{- if .Values.sessionStorage.redis.standalone.connectionUrl -}}
 {{ .Values.sessionStorage.redis.standalone.connectionUrl }}
-{{- else if .Values.redis.enabled -}}
-{{- printf "redis://%s-master:%.0f" (include "oauth2-proxy.redis.fullname" .) .Values.redis.master.service.ports.redis -}}
+{{- else if eq (include "oauth2-proxy.redis.enabled" .) "true" -}}
+{{- $redisValues := index .Values "redis-ha" | default dict -}}
+{{- printf "redis://%s:%.0f" (include "oauth2-proxy.redis.fullname" .) $redisValues.redis.port -}}
 {{- else -}}
-{{ fail "please set sessionStorage.redis.standalone.connectionUrl or enable the redis subchart via redis.enabled" }}
+{{ fail "please set sessionStorage.redis.standalone.connectionUrl or enable the redis subchart via redis-ha.enabled" }}
 {{- end -}}
 {{- end -}}
 
@@ -117,7 +126,7 @@ Compute the redis url if not set explicitly.
 Returns the version
 */}}
 {{- define "oauth2-proxy.version" -}}
-{{ trimPrefix "v" (lower (.Values.image.tag | default (printf "v%s" .Chart.AppVersion))) }}
+{{ .Values.image.tag | default (printf "v%s" .Chart.AppVersion) }}
 {{- end -}}
 
 {{/*
@@ -154,8 +163,94 @@ metricsServer:
 {{- end }}
 {{- end -}}
 
+{{/*
+Alpha config source resolution:
+- disabled: alphaConfig.enabled=false
+- existing-configmap: alphaConfig.existingConfig is set
+- existing-secret: alphaConfig.existingSecret is set
+- generated: alphaConfig enabled with no external source
+*/}}
+{{- define "oauth2-proxy.alpha-config.source" -}}
+{{- if not .Values.alphaConfig.enabled -}}
+disabled
+{{- else if .Values.alphaConfig.existingConfig -}}
+existing-configmap
+{{- else if .Values.alphaConfig.existingSecret -}}
+existing-secret
+{{- else -}}
+generated
+{{- end -}}
+{{- end -}}
+
+{{- define "oauth2-proxy.alpha-config.name" -}}
+{{- $source := include "oauth2-proxy.alpha-config.source" . -}}
+{{- if eq $source "existing-configmap" -}}
+{{- .Values.alphaConfig.existingConfig -}}
+{{- else if eq $source "existing-secret" -}}
+{{- .Values.alphaConfig.existingSecret -}}
+{{- else if eq $source "generated" -}}
+{{- printf "%s-alpha" (include "oauth2-proxy.fullname" .) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Legacy config mode resolution:
+- alphaConfig.enabled=true + forceLegacyConfig=false
+    → generated-alpha-compatible (minimal legacy config; config.existingConfig and config.configFile are ignored)
+- config.existingConfig is set (only when NOT in alphaConfig.enabled + !forceLegacyConfig path)
+    → existing-configmap (external ConfigMap)
+- config.configFile is set (only when NOT in alphaConfig.enabled + !forceLegacyConfig path)
+    → inline-custom (user-provided content)
+- alphaConfig.enabled=true + forceLegacyConfig=true (no existingConfig/configFile)
+    → generated-alpha-compatible
+- alphaConfig.enabled=false + forceLegacyConfig=false + no configFile/existingConfig
+    → no-config (nothing generated/mounted)
+- Default
+    → generated-legacy (full legacy config with emailDomains + upstreams)
+*/}}
+{{- define "oauth2-proxy.legacy-config.mode" -}}
+{{- if and .Values.alphaConfig.enabled (not .Values.config.forceLegacyConfig) -}}
+generated-alpha-compatible
+{{- else if .Values.config.existingConfig -}}
+existing-configmap
+{{- else if .Values.config.configFile -}}
+inline-custom
+{{- else if .Values.alphaConfig.enabled -}}
+generated-alpha-compatible
+{{- else if not .Values.config.forceLegacyConfig -}}
+no-config
+{{- else -}}
+generated-legacy
+{{- end -}}
+{{- end -}}
+
+{{- define "oauth2-proxy.legacy-config.name" -}}
+{{- if eq (include "oauth2-proxy.legacy-config.mode" .) "existing-configmap" -}}
+{{- .Values.config.existingConfig -}}
+{{- else -}}
+{{- template "oauth2-proxy.fullname" . -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "oauth2-proxy.legacy-config.content" -}}
+{{- if eq (include "oauth2-proxy.legacy-config.mode" .) "inline-custom" -}}
+{{- tpl .Values.config.configFile $ -}}
+{{- else if eq (include "oauth2-proxy.legacy-config.mode" .) "generated-alpha-compatible" -}}
+email_domains = {{ .Values.config.emailDomains | toJson }}
+{{- else -}}
+email_domains = {{ .Values.config.emailDomains | toJson }}
+upstreams = {{ .Values.config.upstreams | toJson }}
+{{- end -}}
+{{- end -}}
+
 {{- define "oauth2-proxy.secrets" -}}
+{{- if has "cookie-secret" .Values.config.requiredSecretKeys }}
 cookie-secret: {{ tpl .Values.config.cookieSecret $ | b64enc | quote }}
+{{- end }}
+{{- if has "client-secret" .Values.config.requiredSecretKeys }}
 client-secret: {{ tpl .Values.config.clientSecret $ | b64enc | quote }}
+{{- end }}
+{{- if has "client-id" .Values.config.requiredSecretKeys }}
 client-id: {{ tpl .Values.config.clientID $ | b64enc | quote }}
+{{- end }}
 {{- end -}}
