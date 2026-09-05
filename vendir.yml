@@ -14,7 +14,7 @@ directories:
   - path: .
     helmChart:
       name: kagent
-      version: "0.9.12"
+      version: "0.10.0"
       repository:
         url: oci://ghcr.io/kagent-dev/kagent/helm
 # CRDs for the kagent app, vendored as raw upstream YAML into the chart's crds/
@@ -29,7 +29,7 @@ directories:
   - path: kagent.dev
     git:
       url: https://github.com/kagent-dev/kagent
-      ref: v0.9.12
+      ref: v0.10.0
     includePaths:
     - helm/kagent-crds/templates/*.yaml
     newRootPath: helm/kagent-crds/templates

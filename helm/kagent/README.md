@@ -13,7 +13,7 @@ Giant Swarm packaging of the upstream kagent-dev/kagent controller (Kubernetes-n
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://charts/kagent | kagent | 0.9.12 |
+| file://charts/kagent | kagent | 0.10.0 |
 
 ## Values
 

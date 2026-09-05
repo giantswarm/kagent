@@ -67,3 +67,12 @@ Create the grafana server URL
 {{- define "grafana-mcp.serverUrl" -}}
 {{- printf "http://%s.%s:%d/mcp" (include "grafana-mcp.fullname" .) .Release.Namespace (.Values.service.port | int) }}
 {{- end }}
+
+{{/*
+Join registry/repository/name/tag for grafana-mcp image, skipping empty segments, then append tag
+*/}}
+{{- define "grafana-mcp.image" -}}
+{{- $img := .Values.image -}}
+{{- $parts := compact (list $img.registry $img.repository $img.name) -}}
+{{- printf "%s:%s" (join "/" $parts) $img.tag -}}
+{{- end -}}

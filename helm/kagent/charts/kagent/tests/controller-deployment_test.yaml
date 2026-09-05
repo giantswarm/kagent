@@ -36,7 +36,7 @@ tests:
           value: controller
       - matchRegex:
           path: spec.template.spec.containers[0].image
-          pattern: "^cr\\.kagent\\.dev/kagent-dev/kagent/controller:.+"
+          pattern: "^ghcr\\.io/kagent-dev/kagent/controller:.+"
 
   - it: should use global tag when set
     template: controller-deployment.yaml
@@ -45,7 +45,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: cr.kagent.dev/kagent-dev/kagent/controller:v1.0.0
+          value: ghcr.io/kagent-dev/kagent/controller:v1.0.0
 
   - it: should have correct controller resources
     template: controller-deployment.yaml
@@ -76,6 +76,35 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].ports[0].containerPort
           value: 8083
+
+  - it: should set global annotations on deployment
+    template: controller-deployment.yaml
+    set:
+      annotations:
+        app.kubernetes.io/managed-by: "custom"
+    asserts:
+      - isSubset:
+          path: metadata.annotations
+          content:
+            app.kubernetes.io/managed-by: "custom"
+
+  - it: should set controller annotations on deployment and override global ones
+    template: controller-deployment.yaml
+    set:
+      annotations:
+        global-key: "global-value"
+        shared-key: "global-wins"
+      controller:
+        annotations:
+          controller-key: "controller-value"
+          shared-key: "controller-wins"
+    asserts:
+      - isSubset:
+          path: metadata.annotations
+          content:
+            global-key: "global-value"
+            controller-key: "controller-value"
+            shared-key: "controller-wins"
 
   - it: should set substrate ate-api env vars and projected token when substrate is enabled
     template: controller-deployment.yaml
@@ -125,7 +154,7 @@ tests:
     asserts:
       - equal:
           path: data.A2A_BASE_URL
-          value: "http://RELEASE-NAME-controller.NAMESPACE.svc.cluster.local:8083"
+          value: "http://RELEASE-NAME-controller.NAMESPACE.svc:8083"
 
   - it: should set A2A_BASE_URL with custom value when explicitly set
     template: controller-configmap.yaml
@@ -169,6 +198,23 @@ tests:
       - equal:
           path: data.MCP_EGRESS_PLAINTEXT
           value: "true"
+
+  - it: should default TOOL_REFRESH_INTERVAL to 60s
+    template: controller-configmap.yaml
+    asserts:
+      - equal:
+          path: data.TOOL_REFRESH_INTERVAL
+          value: "60s"
+
+  - it: should set TOOL_REFRESH_INTERVAL when configured
+    template: controller-configmap.yaml
+    set:
+      controller:
+        toolRefreshInterval: "15m"
+    asserts:
+      - equal:
+          path: data.TOOL_REFRESH_INTERVAL
+          value: "15m"
 
   - it: should use custom loglevel when set
     template: controller-configmap.yaml
@@ -239,6 +285,35 @@ tests:
       - equal:
           path: data.DEFAULT_AGENT_POD_LABELS
           value: "team=platform"
+
+  - it: should set DEFAULT_AGENT_NODE_SELECTOR when nodeSelector is configured
+    template: controller-configmap.yaml
+    set:
+      controller:
+        agentDeployment:
+          nodeSelector:
+            kubernetes.io/os: linux
+            pool: agents
+    asserts:
+      - equal:
+          path: data.DEFAULT_AGENT_NODE_SELECTOR
+          value: "kubernetes.io/os=linux,pool=agents"
+
+  - it: should not set DEFAULT_AGENT_NODE_SELECTOR when nodeSelector is empty
+    template: controller-configmap.yaml
+    set:
+      controller:
+        agentDeployment:
+          nodeSelector: {}
+    asserts:
+      - notExists:
+          path: data.DEFAULT_AGENT_NODE_SELECTOR
+
+  - it: should not set DEFAULT_AGENT_NODE_SELECTOR when nodeSelector is not configured
+    template: controller-configmap.yaml
+    asserts:
+      - notExists:
+          path: data.DEFAULT_AGENT_NODE_SELECTOR
 
   - it: should set DEFAULT_AGENT_BIND_HOST when host is configured
     template: controller-configmap.yaml
@@ -382,6 +457,63 @@ tests:
             effect: NoSchedule
             operator: Equal
 
+  - it: should set affinity
+    template: controller-deployment.yaml
+    set:
+      controller:
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: topology.kubernetes.io/zone
+                      operator: In
+                      values:
+                        - us-east-1a
+                        - us-east-1b
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].key
+          value: topology.kubernetes.io/zone
+      - equal:
+          path: spec.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].operator
+          value: In
+      - equal:
+          path: spec.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].values
+          value:
+            - us-east-1a
+            - us-east-1b
+
+  - it: should set topologySpreadConstraints
+    template: controller-deployment.yaml
+    set:
+      controller:
+        topologySpreadConstraints:
+          - maxSkew: 1
+            topologyKey: topology.kubernetes.io/zone
+            whenUnsatisfiable: DoNotSchedule
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: kagent-controller
+    asserts:
+      - contains:
+          path: spec.template.spec.topologySpreadConstraints
+          content:
+            maxSkew: 1
+            topologyKey: topology.kubernetes.io/zone
+            whenUnsatisfiable: DoNotSchedule
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: kagent-controller
+
+  - it: should not render affinity or topologySpreadConstraints by default
+    template: controller-deployment.yaml
+    asserts:
+      - notExists:
+          path: spec.template.spec.affinity
+      - notExists:
+          path: spec.template.spec.topologySpreadConstraints
+
   - it: should render extra volumes and mounts when provided
     template: controller-deployment.yaml
     set:
@@ -431,7 +563,7 @@ tests:
           path: spec.template.spec.containers[0].env
           content:
             name: POSTGRES_DATABASE_URL
-            value: "postgres://kagent:$(POSTGRES_PASSWORD)@RELEASE-NAME-postgresql.NAMESPACE.svc.cluster.local:5432/kagent?sslmode=disable"
+            value: "postgres://kagent:$(POSTGRES_PASSWORD)@RELEASE-NAME-postgresql.NAMESPACE.svc:5432/kagent?sslmode=disable"
 
   - it: should set POSTGRES_DATABASE_URL with external url when url is set
     template: controller-deployment.yaml
@@ -480,6 +612,42 @@ tests:
       - equal:
           path: data.DATABASE_VECTOR_ENABLED
           value: "true"
+
+  - it: should not set DB pool env vars by default
+    template: controller-configmap.yaml
+    asserts:
+      - notExists:
+          path: data.DB_MAX_CONNS
+      - notExists:
+          path: data.DB_MIN_CONNS
+      - notExists:
+          path: data.DB_MAX_CONN_IDLE_TIME
+      - notExists:
+          path: data.DB_MAX_CONN_LIFETIME
+
+  - it: should set DB pool env vars when pool is configured
+    template: controller-configmap.yaml
+    set:
+      database:
+        postgres:
+          pool:
+            maxConns: 4
+            minConns: 0
+            maxConnIdleTime: 1m
+            maxConnLifetime: 10m
+    asserts:
+      - equal:
+          path: data.DB_MAX_CONNS
+          value: "4"
+      - equal:
+          path: data.DB_MIN_CONNS
+          value: "0"
+      - equal:
+          path: data.DB_MAX_CONN_IDLE_TIME
+          value: "1m"
+      - equal:
+          path: data.DB_MAX_CONN_LIFETIME
+          value: "10m"
 
   - it: should not set POSTGRES_DATABASE_URL in configmap
     template: controller-configmap.yaml

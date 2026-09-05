@@ -3,16 +3,16 @@ directories:
 - contents:
   - helmChart:
       appVersion: ""
-      version: 0.9.12
+      version: 0.10.0
     path: .
   path: helm/kagent/charts/kagent
 - contents:
   - git:
-      commitTitle: 'Backport(0.9.x): reference declarative agents by tag; digests
-        only for sandbox agents (#2242) (#2266)...'
-      sha: b45990582595acea5f6e765b86a10b251c50d5c9
+      commitTitle: 'fix(ui): preserve post-login redirect target through `oauth2-proxy`
+        sign-in (#2532)...'
+      sha: ae008d1e19fbb195ba3c8205fe345d17309a9158
       tags:
-      - v0.9.12
+      - v0.10.0
     path: kagent.dev
   - git:
       commitTitle: 'refactor(helm): remove rbac.clusterScoped, derive RBAC scope from

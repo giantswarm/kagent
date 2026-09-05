@@ -1,0 +1,7 @@
+title = "gitleaks config"
+
+[allowlist]
+  description = "Placeholder PEM headers in vendored upstream chart docs (redis-ha restore.ssh.key examples under helm/kagent/charts/), not keys. The character class keeps this file itself clear of the pre-commit detect-private-key blacklist."
+  regexes = [
+    '''-----BEGIN RSA PRIVATE K[E]Y-----\\n\.\.\.''',
+  ]
