@@ -24,6 +24,7 @@ Giant Swarm packaging of the upstream kagent-dev/kagent controller (Kubernetes-n
 | kagent.controller.image.repository | string | `"kagent-controller"` |  |
 | kagent.controller.agentImage.repository | string | `"kagent-app"` |  |
 | kagent.controller.skillsInitImage.repository | string | `"kagent-skills-init"` |  |
+| kagent.controller.goAgentImage.repository | string | `"golang-adk"` |  |
 | kagent.ui.image.repository | string | `"kagent-ui"` |  |
 | kagent.namespaceOverride | string | `"kagent"` |  |
 | kagent.kagent-tools.tools.image.registry | string | `"gsoci.azurecr.io"` |  |
