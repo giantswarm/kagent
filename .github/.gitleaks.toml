@@ -1,0 +1,7 @@
+title = "gitleaks config"
+
+[allowlist]
+  description = "Placeholder PEM headers in vendored upstream chart docs (redis-ha restore.ssh.key examples under helm/kagent/charts/), not keys"
+  regexes = [
+    '''-----BEGIN RSA PRIVATE KEY-----\\n\.\.\.''',
+  ]
