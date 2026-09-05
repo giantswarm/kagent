@@ -62,6 +62,15 @@
                                 }
                             }
                         },
+                        "goAgentImage": {
+                            "type": "object",
+                            "additionalProperties": true,
+                            "properties": {
+                                "repository": {
+                                    "type": "string"
+                                }
+                            }
+                        },
                         "image": {
                             "type": "object",
                             "additionalProperties": true,

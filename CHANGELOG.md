@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Map the Go ADK runtime image to the flat gsoci mirror
+  (`kagent.controller.goAgentImage.repository: golang-adk`). Upstream 0.10.0 made
+  `runtime: go` the default for declarative agents and reads the image from the
+  new `controller.goAgentImage` key, whose upstream default is the nested
+  `kagent-dev/kagent/golang-adk` path; retagger publishes the mirror as
+  `gsoci.azurecr.io/giantswarm/golang-adk`. Without the mapping every new
+  declarative agent pod failed with ImagePullBackOff and its Agent never reached
+  Ready.
 - The vendored CRDs carry `helm.sh/resource-policy: keep` again, as `make sync` and
   the README document, and `make verify` fails when one does not. Metadata only:
   Helm never deletes a CRD that ships in a chart's `crds/` directory, so no

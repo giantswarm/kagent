@@ -34,6 +34,15 @@ kagent:  # @schema additionalProperties: true
       repository: kagent-app
     skillsInitImage:  # @schema additionalProperties: true
       repository: kagent-skills-init
+    # The Go ADK runtime image for declarative agents with `runtime: go` -- the
+    # CRD default since upstream 0.10.0, which also introduced this key (before
+    # it, the controller derived the Go image from agentImage.repository). The
+    # upstream default repository is the nested `kagent-dev/kagent/golang-adk`;
+    # retagger mirrors it flat as `golang-adk` (giantswarm/retagger
+    # images/renamed-kagent.yaml), so without this mapping every new declarative
+    # agent pod fails to pull and the Agent never reports Ready.
+    goAgentImage:  # @schema additionalProperties: true
+      repository: golang-adk
   ui:  # @schema additionalProperties: true
     image:  # @schema additionalProperties: true
       repository: kagent-ui
