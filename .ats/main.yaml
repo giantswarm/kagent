@@ -1,10 +1,20 @@
-# app-test-suite configuration.
+# app-test-suite (ATS >= 1.0) config, consumed by the generated
+# `run-tests-with-ats` CircleCI job (execute-chart-tests). The job creates the
+# kind cluster and hands ATS its kubeconfig; helm and kubectl come with the
+# ATS image.
 #
-# Smoke/functional/upgrade test execution is skipped in CI for now: a real run
-# deploys the chart on a kind cluster, which pulls the kagent controller/UI images
-# from gsoci.azurecr.io/giantswarm. The smoke test under tests/ats is ready;
-# remove the matching entries from skip-steps once a kind run is wired up. Same
-# approach as giantswarm/agent-sandbox and giantswarm/muster.
-# @TODO: enable ATS tests by removing the matching entries from skip-steps once a
-# kind-based deploy of the vendored kagent chart is validated.
-skip-steps: [smoke,functional,upgrade]
+# Smoke: ATS installs the packaged umbrella with `helm upgrade --install
+# --wait` into the `kagent` namespace (values.yaml pins the core resources to
+# that namespace via namespaceOverride and nothing else creates it on a bare
+# cluster, so the release has to land there for `--create-namespace` to make
+# it), with tests/ats/values.yaml, which gives the release the shape the
+# agent-platform meta-package deploys: bundled declarative agents and kagent's
+# own MCP servers off, a placeholder provider key so the ModelConfig is
+# accepted. Without that, Helm 4's `--wait` sits on the never-Ready Agent CRs
+# until the 30 min timeout. The kagent images come from the gsoci mirrors.
+# tests/ats asserts that the kagent-controller Deployment is ready.
+#
+# functional and upgrade stay skipped: there is no second scenario yet.
+app-tests-deploy-namespace: kagent
+app-tests-app-config-file: tests/ats/values.yaml
+skip-steps: [functional,upgrade]
