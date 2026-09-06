@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Render the bundled `kagent-tools` tool server into the `kagent` namespace
+  (`kagent.kagent-tools.namespaceOverride: kagent`, equal to
+  `kagent.namespaceOverride`). The upstream chart composes the
+  `kagent-tool-server` RemoteMCPServer URL from its own namespace
+  (`http://kagent-tools.kagent:8084/mcp`) but leaves the subchart's namespace at
+  the release namespace, so with a release namespace other than `kagent` -- the
+  agent-platform layout -- the Deployment and Services landed in the release
+  namespace, the URL did not resolve ("no such host") and the RemoteMCPServer
+  stayed `Accepted=False`: agents referencing the built-in tools had none. On
+  upgrade Helm deletes the kagent-tools Deployment, Services and ServiceAccount
+  in the release namespace and recreates them in `kagent`; the
+  ClusterRoleBinding subject follows the ServiceAccount. `make verify` (the
+  `verify-vendored-tree` CircleCI job) now renders the chart with release
+  namespace `agent-platform` and fails when the tools Service and the
+  RemoteMCPServer URL disagree, and the ATS smoke enables `kagent-tools` and
+  waits for the RemoteMCPServer to be `Accepted`.
 - The ATS smoke now creates a minimal `kagent.dev/v1alpha2` declarative Agent
   (no `runtime`, so the CRD default applies) against the chart's default
   ModelConfig with a fake provider key, asserts the Deployment the controller

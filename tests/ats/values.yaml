@@ -2,9 +2,11 @@
 #
 # The smoke proves that the umbrella installs on a bare kind cluster and that
 # the controller comes up, with the same shape the agent-platform meta-package
-# deploys: the bundled declarative agents and kagent's own MCP servers are off
-# there too (muster fills those roles), so nothing here is smoke-only except
-# the placeholder API key.
+# deploys: the bundled declarative agents and the grafana/kmcp MCP servers are
+# off there too (muster fills those roles), so nothing here is smoke-only
+# except the placeholder API key. The built-in kagent-tools tool server stays
+# ON: the smoke waits for its RemoteMCPServer to be Accepted, which proves the
+# controller reaches the tool server the chart renders.
 #
 # Why these values are needed at all: Helm 4's `--wait` (ATS installs with
 # `helm upgrade --install --wait`) tracks the release's custom resources as
@@ -21,8 +23,11 @@ kagent:
       apiKey: ats-smoke-placeholder
   kmcp:
     enabled: false
+  # On: the chart renders the `kagent-tool-server` RemoteMCPServer for it and
+  # tests/ats asserts the controller connects (Accepted=True). The image is the
+  # gsoci mirror helm/kagent/values.yaml points at.
   kagent-tools:
-    enabled: false
+    enabled: true
   grafana-mcp:
     enabled: false
   querydoc:

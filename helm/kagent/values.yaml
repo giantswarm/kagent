@@ -52,6 +52,19 @@ kagent:  # @schema additionalProperties: true
   # The bundled kagent-tools subchart reads its own image/resources keys
   # (`.Values.tools.*`) and does NOT inherit the parent `kagent.registry`.
   kagent-tools:  # @schema additionalProperties: true
+    # Keep equal to `kagent.namespaceOverride`. The subchart renders its
+    # Deployment, Services and ServiceAccount into its OWN `namespaceOverride`
+    # (default: the release namespace), while the parent chart's RemoteMCPServer
+    # `kagent-tool-server` composes the tool-server URL from the PARENT's
+    # namespace (charts/kagent/templates/toolserver-kagent.yaml renders
+    # `http://<tools fullname>.<kagent namespace>:8084/mcp`). Nothing upstream
+    # ties the two together, so with a release namespace other than `kagent`
+    # (the agent-platform layout) the Service landed in the release namespace,
+    # the URL pointed at `kagent-tools.kagent`, and the RemoteMCPServer stayed
+    # Accepted=False ("no such host"): agents referencing the built-in tools
+    # had none. `make verify` renders that layout and fails when the two
+    # namespaces disagree.
+    namespaceOverride: kagent
     tools:  # @schema additionalProperties: true
       image:  # @schema additionalProperties: true
         # Source the tool-server image from the GS-retagged registry (mirror of

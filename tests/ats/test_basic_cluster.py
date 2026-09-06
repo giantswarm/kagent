@@ -1,12 +1,16 @@
 """ATS smoke for the kagent umbrella chart.
 
-Two things are proven on the kind cluster ATS installs the chart into:
+Three things are proven on the kind cluster ATS installs the chart into:
 
   1. the kagent-controller Deployment comes up (test_pods_available);
   2. the controller can run an Agent (test_declarative_agent_reaches_ready):
      a minimal `kagent.dev/v1alpha2` declarative Agent against the chart's
      default ModelConfig reaches `Ready`, and the Deployment the controller
-     renders for it runs the Go ADK runtime image from the flat gsoci mirror.
+     renders for it runs the Go ADK runtime image from the flat gsoci mirror;
+  3. the controller reaches the bundled kagent-tools tool server
+     (test_builtin_tool_server_accepted): the `kagent-tool-server`
+     RemoteMCPServer the chart renders points at a Service that exists and
+     becomes `Accepted` with discovered tools.
 
 The second test exists because the first one cannot see the class of bug
 upstream 0.10.0 shipped into this chart (giantswarm/kagent#63): declarative
@@ -23,7 +27,8 @@ an available replica.
 
 import logging
 import time
-from typing import Any, Dict, Iterator, List, Optional
+import urllib.parse
+from typing import Any, Dict, Iterator, List, Optional, Tuple
 
 import pykube
 import pytest
@@ -54,6 +59,12 @@ AGENT_READY_TIMEOUT = 600
 # Container waiting reasons that never resolve on their own: fail right away
 # with the reason instead of sitting out the Ready timeout.
 IMAGE_PULL_FAILURES = {"ErrImagePull", "ImagePullBackOff", "InvalidImageName"}
+# The RemoteMCPServer the upstream chart renders for the bundled kagent-tools
+# (`<kagent fullname>-tool-server` in charts/kagent/templates/toolserver-kagent.yaml).
+TOOL_SERVER_NAME = "kagent-tool-server"
+# The controller retries a failed tool-server connection once a minute; the
+# tool-server pod itself needs the image pull plus a 15 s readiness delay.
+TOOL_SERVER_ACCEPTED_TIMEOUT = 300
 
 
 @pytest.mark.smoke
@@ -333,6 +344,21 @@ def _pods_summary(pods: List[pykube.Pod]) -> str:
     return "; ".join(parts)
 
 
+def _raise_on_image_pull_failure(pods: List[pykube.Pod]) -> None:
+    """Fail right away, with the kubelet's reason, when a pod cannot pull an
+    image -- a wrong repository path or an unmirrored tag never resolves and
+    would otherwise sit out the whole timeout."""
+    for pod in pods:
+        for cs in _container_statuses(pod):
+            waiting = cs.get("state", {}).get("waiting") or {}
+            if waiting.get("reason") in IMAGE_PULL_FAILURES:
+                raise AssertionError(
+                    f"pod {pod.namespace}/{pod.name} container {cs['name']} "
+                    f"cannot pull {cs.get('image')}: {waiting['reason']}: "
+                    f"{waiting.get('message', '')}"
+                )
+
+
 def wait_for_agent_ready(
     kube_cluster: Cluster,
     agent_deployment: pykube.Deployment,
@@ -360,15 +386,7 @@ def wait_for_agent_ready(
                 selector=selector
             )
         )
-        for pod in pods:
-            for cs in _container_statuses(pod):
-                waiting = cs.get("state", {}).get("waiting") or {}
-                if waiting.get("reason") in IMAGE_PULL_FAILURES:
-                    raise AssertionError(
-                        f"pod {namespace_name}/{pod.name} container {cs['name']} "
-                        f"cannot pull {cs.get('image')}: {waiting['reason']}: "
-                        f"{waiting.get('message', '')}"
-                    )
+        _raise_on_image_pull_failure(pods)
         polls += 1
         if polls % 3 == 0:
             logger.info(
@@ -390,9 +408,11 @@ def _dump_kagent_state(kube_cluster: Cluster) -> None:
     run after teardown, when the Agent is already being deleted."""
     commands = [
         f"-n {namespace_name} get pods -o wide",
-        f"-n {namespace_name} get agents.kagent.dev,modelconfigs.kagent.dev,deployments",
+        f"-n {namespace_name} get agents.kagent.dev,modelconfigs.kagent.dev,"
+        "remotemcpservers.kagent.dev,deployments,services",
         f"-n {namespace_name} describe agents.kagent.dev {AGENT_NAME}",
         f"-n {namespace_name} describe modelconfigs.kagent.dev {MODEL_CONFIG_NAME}",
+        f"-n {namespace_name} describe remotemcpservers.kagent.dev {TOOL_SERVER_NAME}",
         f"-n {namespace_name} get events --sort-by=.lastTimestamp",
         f"-n {namespace_name} logs deployment/{deployment_name} --tail=200",
     ]
@@ -416,3 +436,128 @@ def test_declarative_agent_reaches_ready(kube_cluster: Cluster, smoke_agent: str
     except BaseException:
         _dump_kagent_state(kube_cluster)
         raise
+
+
+# ---------------------------------------------------------------------------
+# Built-in tool server smoke
+# ---------------------------------------------------------------------------
+
+
+def _service_from_url(url: str) -> Tuple[str, str, int]:
+    """(name, namespace, port) of the in-cluster Service behind an
+    http(s)://<service>.<namespace>[.svc[.cluster.local]][:<port>]/... URL."""
+    parsed = urllib.parse.urlparse(url)
+    labels = (parsed.hostname or "").split(".")
+    assert len(labels) >= 2, f"{url!r} does not name a <service>.<namespace> host"
+    port = parsed.port or (443 if parsed.scheme == "https" else 80)
+    return labels[0], labels[1], port
+
+
+def wait_for_tool_server_accepted(
+    kube_cluster: Cluster,
+    service: pykube.Service,
+    timeout_seconds: int = TOOL_SERVER_ACCEPTED_TIMEOUT,
+) -> Dict[str, Any]:
+    """Poll the RemoteMCPServer's Accepted condition (the controller ran MCP
+    initialize + tools/list against the URL). An image-pull failure on the
+    tool-server pods behind the Service fails the wait immediately."""
+    kube_client = kube_cluster.kube_client
+    tool_servers = _kagent_type(kube_client, "RemoteMCPServer").objects(
+        kube_client, namespace=namespace_name
+    )
+    selector = service.obj["spec"].get("selector") or {}
+    deadline = time.monotonic() + timeout_seconds
+    polls = 0
+    obj: Dict[str, Any] = {}
+    pods: List[pykube.Pod] = []
+    while time.monotonic() < deadline:
+        obj = tool_servers.get_by_name(TOOL_SERVER_NAME).obj
+        accepted = _condition(obj, "Accepted")
+        if accepted is not None and accepted.get("status") == "True":
+            logger.info(
+                "RemoteMCPServer %s is Accepted: %s", TOOL_SERVER_NAME, _conditions_summary(obj)
+            )
+            return obj
+        if selector:
+            pods = list(
+                pykube.Pod.objects(kube_client, namespace=service.namespace).filter(
+                    selector=selector
+                )
+            )
+            _raise_on_image_pull_failure(pods)
+        polls += 1
+        if polls % 3 == 0:
+            logger.info(
+                "waiting for RemoteMCPServer %s to be Accepted: %s; tool-server pods: %s",
+                TOOL_SERVER_NAME,
+                _conditions_summary(obj),
+                _pods_summary(pods),
+            )
+        time.sleep(10)
+    raise AssertionError(
+        f"RemoteMCPServer {namespace_name}/{TOOL_SERVER_NAME} not Accepted after "
+        f"{timeout_seconds}s: {_conditions_summary(obj)}; tool-server pods: {_pods_summary(pods)}"
+    )
+
+
+@pytest.mark.smoke
+def test_builtin_tool_server_accepted(
+    kube_cluster: Cluster, deployment: List[pykube.Deployment]
+) -> None:
+    """The RemoteMCPServer the chart renders for the bundled kagent-tools points
+    at a Service that exists, and the controller reaches it: Accepted=True with
+    discovered tools.
+
+    tests/ats/values.yaml enables `kagent.kagent-tools`. The upstream chart
+    composes the RemoteMCPServer URL from its own namespace while the subchart
+    renders its Service into its own `namespaceOverride`; helm/kagent/values.yaml
+    pins both to `kagent`. The release namespace here is `kagent` as well, so
+    this test cannot see the two drift apart -- hack/verify-tools-namespace.sh
+    renders the split layout (`make verify`). What this proves is the tool
+    server itself: the image pulls from the gsoci mirror, the pod passes its
+    readiness probe, and the controller's MCP handshake against it succeeds.
+    """
+    kube_client = kube_cluster.kube_client
+    tool_server = (
+        _kagent_type(kube_client, "RemoteMCPServer")
+        .objects(kube_client, namespace=namespace_name)
+        .get_by_name(TOOL_SERVER_NAME)
+        .obj
+    )
+    url = tool_server["spec"]["url"]
+    svc_name, svc_namespace, port = _service_from_url(url)
+    service = pykube.Service.objects(kube_client, namespace=svc_namespace).get_or_none(
+        name=svc_name
+    )
+    assert service is not None, (
+        f"RemoteMCPServer {namespace_name}/{TOOL_SERVER_NAME} points at {url}, but there "
+        f"is no Service {svc_namespace}/{svc_name}: the kagent-tools subchart renders into "
+        "`kagent.kagent-tools.namespaceOverride` (default: the release namespace) while "
+        "the parent chart composes the URL from `kagent.namespaceOverride` -- the two "
+        "must agree (helm/kagent/values.yaml)"
+    )
+    ports = [p.get("port") for p in service.obj["spec"].get("ports") or []]
+    assert port in ports, (
+        f"Service {svc_namespace}/{svc_name} serves {ports}, not port {port} from {url}"
+    )
+    logger.info(
+        "RemoteMCPServer %s -> %s -> Service %s/%s port %s exists",
+        TOOL_SERVER_NAME,
+        url,
+        svc_namespace,
+        svc_name,
+        port,
+    )
+    try:
+        accepted = wait_for_tool_server_accepted(kube_cluster, service)
+    except BaseException:
+        _dump_kagent_state(kube_cluster)
+        raise
+    tools = accepted.get("status", {}).get("discoveredTools") or []
+    assert tools, f"RemoteMCPServer {TOOL_SERVER_NAME} is Accepted but discovered no tools"
+    logger.info(
+        "RemoteMCPServer %s discovered %d tools, e.g. %s",
+        TOOL_SERVER_NAME,
+        len(tools),
+        sorted(t.get("name", "") for t in tools)[:5],
+    )
