@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- The ATS smoke now creates a minimal `kagent.dev/v1alpha2` declarative Agent
+  (no `runtime`, so the CRD default applies) against the chart's default
+  ModelConfig with a fake provider key, asserts the Deployment the controller
+  renders for it runs `gsoci.azurecr.io/giantswarm/golang-adk:*`, and waits for
+  the Agent's `Ready` condition, failing fast on image-pull errors and dumping
+  the `kagent` namespace on failure. The smoke used to check only that the
+  controller Deployment is ready, which is why the broken Go ADK image path of
+  the 0.10.0 bump (#63) passed CI.
 - Map the Go ADK runtime image to the flat gsoci mirror
   (`kagent.controller.goAgentImage.repository: golang-adk`). Upstream 0.10.0 made
   `runtime: go` the default for declarative agents and reads the image from the
