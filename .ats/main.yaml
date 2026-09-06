@@ -12,7 +12,9 @@
 # own MCP servers off, a placeholder provider key so the ModelConfig is
 # accepted. Without that, Helm 4's `--wait` sits on the never-Ready Agent CRs
 # until the 30 min timeout. The kagent images come from the gsoci mirrors.
-# tests/ats asserts that the kagent-controller Deployment is ready.
+# tests/ats asserts that the kagent-controller Deployment is ready and that a
+# minimal declarative Agent (default ModelConfig, fake provider key) reaches
+# Ready on the flat gsoci Go ADK runtime image.
 #
 # functional and upgrade stay skipped: there is no second scenario yet.
 app-tests-deploy-namespace: kagent
