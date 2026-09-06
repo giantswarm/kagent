@@ -10,8 +10,12 @@ jobs:
   # when the vendored CRDs have lost `helm.sh/resource-policy: keep`. A dependency
   # bump that edits vendir.yml and runs `vendir sync` without `make sync` produces
   # both: a chart that claims one upstream kagent release and contains another,
-  # and CRDs that no longer carry an annotation the README promises. This job is
-  # the gate. cimg/base already carries mikefarah yq -- no installs.
+  # and CRDs that no longer carry an annotation the README promises. They also
+  # pass when the bundled kagent-tools renders into a different namespace than
+  # the kagent-tool-server RemoteMCPServer URL names (hack/verify-tools-namespace.sh
+  # renders the agent-platform layout, which ATS cannot exercise). This job is
+  # the gate. cimg/base already carries mikefarah yq; helm is installed for the
+  # render check.
   verify-vendored-tree:
     docker:
     - image: cimg/base:current
@@ -19,7 +23,12 @@ jobs:
     steps:
     - checkout
     - run:
-        name: Verify the vendored kagent tree
+        name: Install helm
+        command: |
+          curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | DESIRED_VERSION=v3.21.4 bash
+          helm version --short
+    - run:
+        name: Verify the vendored kagent tree and the rendered chart
         command: make verify
 
 workflows:

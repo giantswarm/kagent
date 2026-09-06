@@ -28,7 +28,7 @@ sync: ## Re-vendor the upstream kagent chart + CRDs (pinned in vendir.yml), re-i
 KAGENT_VERSION = $(shell $(YQ) '.directories[] | select(.path == "helm/kagent/charts/kagent") | .contents[0].helmChart.version' vendir.yml | tr -d '"')
 
 .PHONY: verify
-verify: test-crd-keep verify-version verify-crd-keep ## Run every check on the vendored tree.
+verify: test-crd-keep verify-version verify-crd-keep verify-tools-namespace ## Run every check on the vendored tree and the rendered chart.
 
 .PHONY: verify-version
 verify-version: ## Check that every kagent version string agrees with the vendir.yml pin.
@@ -37,6 +37,14 @@ verify-version: ## Check that every kagent version string agrees with the vendir
 .PHONY: verify-crd-keep
 verify-crd-keep: ## Check that every vendored CRD carries helm.sh/resource-policy: keep.
 	./hack/crd-keep.sh --check
+
+# The upstream chart composes the kagent-tool-server RemoteMCPServer URL from its
+# own namespaceOverride but leaves the kagent-tools subchart in the release
+# namespace; values.yaml pins both to `kagent`. ATS cannot see them drift (its
+# release namespace is `kagent`), so render the agent-platform layout and compare.
+.PHONY: verify-tools-namespace
+verify-tools-namespace: ## Check that the bundled kagent-tools renders into the namespace the RemoteMCPServer URL names.
+	./hack/verify-tools-namespace.sh
 
 # The gate is only worth what its transform is worth, and the vendored corpus
 # exercises one document shape out of the several an upstream bump could bring.

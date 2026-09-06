@@ -98,6 +98,9 @@
                     "type": "object",
                     "additionalProperties": true,
                     "properties": {
+                        "namespaceOverride": {
+                            "type": "string"
+                        },
                         "tools": {
                             "type": "object",
                             "additionalProperties": true,

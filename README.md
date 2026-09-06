@@ -53,7 +53,15 @@ regenerate the schema/README via pre-commit.
 
 `make verify` (also a CircleCI job) checks the result: every kagent version string
 agrees with the `vendir.yml` pin, and every vendored CRD carries the `keep`
-annotation. A bump that runs `vendir sync` without `make sync` fails there.
+annotation. A bump that runs `vendir sync` without `make sync` fails there. It also
+renders the chart with a release namespace other than `kagent` (the agent-platform
+layout) and fails when the bundled `kagent-tools` Service lands in a different
+namespace than the one the `kagent-tool-server` RemoteMCPServer URL names
+(`hack/verify-tools-namespace.sh`): the upstream chart composes that URL from its
+own `namespaceOverride` but leaves the subchart in the release namespace, so
+`kagent.kagent-tools.namespaceOverride` must stay equal to `kagent.namespaceOverride`.
+The ATS smoke cannot see the two drift because it installs into `kagent`, where
+release namespace and override coincide.
 `hack/crd-keep.sh` does the injection, `--check` is the gate, and `--self-test`
 covers the document shapes the vendored corpus does not currently contain. The
 insert is line-oriented, to keep an upstream bump to a one-line diff, so `yq`
