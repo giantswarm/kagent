@@ -246,7 +246,7 @@ controller:  # @schema skipProperties: true; additionalProperties: true
   agentImage:
     registry: ""
     repository: kagent-app
-    tag: "" # Will default to global, then Chart version
+    tag: ""  # Will default to global, then Chart version
     pullPolicy: ""
     # -- Image pull secret name set on agent pods created by the controller
     pullSecret: ""
@@ -254,13 +254,13 @@ controller:  # @schema skipProperties: true; additionalProperties: true
   skillsInitImage:
     registry: ""
     repository: kagent-skills-init
-    tag: "" # Will default to global, then Chart version
+    tag: ""  # Will default to global, then Chart version
     pullPolicy: ""
   # -- The image used for the Go (ADK) runtime agent.
   goAgentImage:
     registry: ""
     repository: golang-adk
-    tag: "" # Will default to global, then Chart version
+    tag: ""  # Will default to global, then Chart version
     pullPolicy: ""
   # -- @deprecated Removed in 0.10.0. The A2A SDK now handles SSE buffering and timeouts
   # internally. These values have no effect and will be removed in a future release.
@@ -345,7 +345,7 @@ controller:  # @schema skipProperties: true; additionalProperties: true
   image:
     registry: ""
     repository: kagent-controller
-    tag: "" # Will default to global, then Chart version
+    tag: ""  # Will default to global, then Chart version
     pullPolicy: ""
   resources:
     requests:
@@ -507,7 +507,7 @@ ui:  # @schema skipProperties: true; additionalProperties: true
     proxyReadTimeout: 1800s
     # -- proxy_send_timeout: max time between two successive writes to the upstream.
     proxySendTimeout: 1800s
-  env: {} # Additional configuration key-value pairs for the ui ConfigMap
+  env: {}  # Additional configuration key-value pairs for the ui ConfigMap
   # -- Additional request headers (beyond Authorization) the UI proxy will forward
   # to the backend. Names are case-insensitive. Hop-by-hop headers (Connection,
   # Transfer-Encoding, etc.) are silently dropped.
@@ -720,8 +720,8 @@ providers:  # @schema skipProperties: true; additionalProperties: true
 kmcp:  # @schema skipProperties: true; additionalProperties: true
   enabled: true
   nameOverride: "kmcp"
-  fullnameOverride: "" # Override if desired
-  namespaceOverride: "" # Override if desired (in conjunction with fullnameOverride to drop the `kagent-` prefix if you want)
+  fullnameOverride: ""  # Override if desired
+  namespaceOverride: ""  # Override if desired (in conjunction with fullnameOverride to drop the `kagent-` prefix if you want)
 
 # ==============================================================================
 # SUBSTRATE
@@ -792,7 +792,7 @@ kagent-tools:  # @schema skipProperties: true; additionalProperties: true
         ephemeral-storage: 512Mi
     loglevel: "debug"
     metrics:
-      port: 8085 # Use a different port than the main service port (8084) to avoid duplicate port definitions
+      port: 8085  # Use a different port than the main service port (8084) to avoid duplicate port definitions
 
 # ==============================================================================
 # PROXY CONFIGURATION
@@ -1071,14 +1071,14 @@ otel:  # @schema skipProperties: true; additionalProperties: true
       otlp:
         endpoint: ""
         protocol: "grpc"
-        timeout: 15000 # milliseconds
+        timeout: 15000  # milliseconds
         insecure: true
   logging:
     enabled: false
     exporter:
       otlp:
         endpoint: ""
-        timeout: 15000 # milliseconds
+        timeout: 15000  # milliseconds
         insecure: true
 
 # ==============================================================================

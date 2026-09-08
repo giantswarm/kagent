@@ -1,5 +1,5 @@
 diff --git a/vendor/kagent/values.yaml b/helm/kagent/values.yaml
-index 3fda5bf..de8a3b2 100644
+index 3fda5bf..ddf06cd 100644
 --- a/vendor/kagent/values.yaml
 +++ b/helm/kagent/values.yaml
 @@ -1,4 +1,19 @@
@@ -125,40 +125,46 @@ index 3fda5bf..de8a3b2 100644
    # -- ServiceAccount settings for the controller pod
    serviceAccount:
      # -- Annotations to add to the controller ServiceAccount.
-@@ -216,7 +245,7 @@ controller:
+@@ -216,22 +245,22 @@ controller:
    a2aBaseUrl: ""
    agentImage:
      registry: ""
 -    repository: kagent-dev/kagent/app
+-    tag: "" # Will default to global, then Chart version
 +    repository: kagent-app
-     tag: "" # Will default to global, then Chart version
++    tag: ""  # Will default to global, then Chart version
      pullPolicy: ""
      # -- Image pull secret name set on agent pods created by the controller
-@@ -224,13 +253,13 @@ controller:
+     pullSecret: ""
    # -- The image used by the skills-init container to clone skills from Git and pull OCI skill images.
    skillsInitImage:
      registry: ""
 -    repository: kagent-dev/kagent/skills-init
+-    tag: "" # Will default to global, then Chart version
 +    repository: kagent-skills-init
-     tag: "" # Will default to global, then Chart version
++    tag: ""  # Will default to global, then Chart version
      pullPolicy: ""
    # -- The image used for the Go (ADK) runtime agent.
    goAgentImage:
      registry: ""
 -    repository: kagent-dev/kagent/golang-adk
+-    tag: "" # Will default to global, then Chart version
 +    repository: golang-adk
-     tag: "" # Will default to global, then Chart version
++    tag: ""  # Will default to global, then Chart version
      pullPolicy: ""
    # -- @deprecated Removed in 0.10.0. The A2A SDK now handles SSE buffering and timeouts
-@@ -315,7 +344,7 @@ controller:
+   # internally. These values have no effect and will be removed in a future release.
+@@ -315,8 +344,8 @@ controller:
 
    image:
      registry: ""
 -    repository: kagent-dev/kagent/controller
+-    tag: "" # Will default to global, then Chart version
 +    repository: kagent-controller
-     tag: "" # Will default to global, then Chart version
++    tag: ""  # Will default to global, then Chart version
      pullPolicy: ""
    resources:
+     requests:
 @@ -408,7 +437,7 @@ controller:
 
  # -- Optional Agent Substrate WorkerPool installed by this chart. This is platform
@@ -186,6 +192,15 @@ index 3fda5bf..de8a3b2 100644
      tag: ""
      pullPolicy: ""
    resources:
+@@ -478,7 +507,7 @@ ui:
+     proxyReadTimeout: 1800s
+     # -- proxy_send_timeout: max time between two successive writes to the upstream.
+     proxySendTimeout: 1800s
+-  env: {} # Additional configuration key-value pairs for the ui ConfigMap
++  env: {}  # Additional configuration key-value pairs for the ui ConfigMap
+   # -- Additional request headers (beyond Authorization) the UI proxy will forward
+   # to the backend. Names are case-insensitive. Hop-by-hop headers (Connection,
+   # Transfer-Encoding, etc.) are silently dropped.
 @@ -634,7 +663,7 @@ ui:
  # ==============================================================================
  # https://kagent.dev/docs/getting-started/configuring-providers
@@ -195,7 +210,7 @@ index 3fda5bf..de8a3b2 100644
    default: openAI
    # -- Annotations added to the metadata of the generated default ModelConfig
    # (the one derived from `providers.default`). Omitted from the resource when empty.
-@@ -688,7 +717,7 @@ providers:
+@@ -688,26 +717,37 @@ providers:
  # KMCP
  # ==============================================================================
 
@@ -203,8 +218,12 @@ index 3fda5bf..de8a3b2 100644
 +kmcp:  # @schema skipProperties: true; additionalProperties: true
    enabled: true
    nameOverride: "kmcp"
-   fullnameOverride: "" # Override if desired
-@@ -698,16 +727,27 @@ kmcp:
+-  fullnameOverride: "" # Override if desired
+-  namespaceOverride: "" # Override if desired (in conjunction with fullnameOverride to drop the `kagent-` prefix if you want)
++  fullnameOverride: ""  # Override if desired
++  namespaceOverride: ""  # Override if desired (in conjunction with fullnameOverride to drop the `kagent-` prefix if you want)
+
+ # ==============================================================================
  # SUBSTRATE
  # ==============================================================================
 
@@ -234,7 +253,7 @@ index 3fda5bf..de8a3b2 100644
    replicaCount: 1
    # -- Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).
    tolerations: []
-@@ -730,6 +770,26 @@ kagent-tools:
+@@ -730,9 +770,29 @@ kagent-tools:
      limits:
        memory: 256Mi
    tools:
@@ -260,7 +279,11 @@ index 3fda5bf..de8a3b2 100644
 +        ephemeral-storage: 512Mi
      loglevel: "debug"
      metrics:
-       port: 8085 # Use a different port than the main service port (8084) to avoid duplicate port definitions
+-      port: 8085 # Use a different port than the main service port (8084) to avoid duplicate port definitions
++      port: 8085  # Use a different port than the main service port (8084) to avoid duplicate port definitions
+
+ # ==============================================================================
+ # PROXY CONFIGURATION
 @@ -744,7 +804,7 @@ kagent-tools:
  # - MCPServer resources and RemoteMCPServer resources with internal k8s URLs
  # Set this once and the controller will apply it to all agents automatically
@@ -378,7 +401,7 @@ index 3fda5bf..de8a3b2 100644
    enabled: false
 
    # Cookie-based sessions (the redis-ha sub-chart is disabled by default;
-@@ -1004,7 +1064,7 @@ oauth2-proxy:
+@@ -1004,21 +1064,21 @@ oauth2-proxy:
  # OBSERVABILITY
  # ==============================================================================
 
@@ -387,3 +410,19 @@ index 3fda5bf..de8a3b2 100644
    tracing:
      enabled: false
      exporter:
+       otlp:
+         endpoint: ""
+         protocol: "grpc"
+-        timeout: 15000 # milliseconds
++        timeout: 15000  # milliseconds
+         insecure: true
+   logging:
+     enabled: false
+     exporter:
+       otlp:
+         endpoint: ""
+-        timeout: 15000 # milliseconds
++        timeout: 15000  # milliseconds
+         insecure: true
+
+ # ==============================================================================
