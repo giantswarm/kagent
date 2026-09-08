@@ -7,9 +7,6 @@
 files now sit at the chart root, so upstream keys move to the top level. The chart
 stays on the `0.x` line because upstream kagent is on `0.x` (`appVersion` `0.10.0`).
 
-`0.1.x` is not end-of-life. It continues on the `release-0.1.x` branch, and CVE and
-upstream bumps for the fleet ship from there.
-
 ### What you have to change
 
 Drop the `kagent:` key and lift everything under it up one level:
