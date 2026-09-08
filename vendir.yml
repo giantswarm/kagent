@@ -13,7 +13,7 @@ directories:
   - path: kagent
     helmChart:
       name: kagent
-      version: "0.10.0"
+      version: "0.10.1"
       repository:
         url: oci://ghcr.io/kagent-dev/kagent/helm
   # Upstream kagent-crds chart: the kagent.dev CRDs plus the kmcp MCPServer CRD
@@ -21,7 +21,7 @@ directories:
   - path: kagent-crds
     helmChart:
       name: kagent-crds
-      version: "0.10.0"
+      version: "0.10.1"
       repository:
         url: oci://ghcr.io/kagent-dev/kagent/helm
 

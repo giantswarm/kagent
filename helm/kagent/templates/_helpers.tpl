@@ -17,16 +17,13 @@ Create a default fully qualified app name.
 Common labels
 */}}
 {{- define "kagent.labels" -}}
-{{- $chart := printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 -}}
-helm.sh/chart: {{ regexReplaceAll "[^a-zA-Z0-9]+$" $chart "" }}
+helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{ include "kagent.selectorLabels" . }}
 {{- if .Chart.Version }}
-{{- $version := .Chart.Version | replace "+" "_" | trunc 63 }}
-app.kubernetes.io/version: {{ regexReplaceAll "[^a-zA-Z0-9]+$" $version "" | quote }}
+app.kubernetes.io/version: {{ .Chart.Version | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 app.kubernetes.io/part-of: kagent
-application.giantswarm.io/team: {{ index .Chart.Annotations "io.giantswarm.application.team" | quote }}
 {{- with .Values.labels }}
 {{ toYaml . | nindent 0 }}
 {{- end }}
