@@ -4,22 +4,18 @@ directories:
   - helmChart:
       appVersion: ""
       version: 0.10.0
-    path: .
-  path: helm/kagent/charts/kagent
+    path: kagent
+  - helmChart:
+      appVersion: ""
+      version: 0.10.0
+    path: kagent-crds
+  path: vendor
 - contents:
-  - git:
-      commitTitle: 'fix(ui): preserve post-login redirect target through `oauth2-proxy`
-        sign-in (#2532)...'
-      sha: ae008d1e19fbb195ba3c8205fe345d17309a9158
-      tags:
-      - v0.10.0
-    path: kagent.dev
-  - git:
-      commitTitle: 'refactor(helm): remove rbac.clusterScoped, derive RBAC scope from
-        rbac.namespaces (#134)...'
-      sha: 1cec6470560fa8ccc43de3d95c7567993ae13e95
-      tags:
-      - v0.3.0
-    path: kmcp
-  path: helm/kagent/crds
+  - directory: {}
+    path: .
+  path: helm/kagent
+- contents:
+  - directory: {}
+    path: .
+  path: helm/kagent-crds
 kind: LockConfig

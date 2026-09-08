@@ -2,44 +2,80 @@ apiVersion: vendir.k14s.io/v1alpha1
 kind: Config
 minimumRequiredVersion: 0.12.0
 directories:
-# Upstream kagent controller app chart, vendored as a subchart of helm/kagent.
-# The PUBLISHED OCI chart is used (not the git tree) because upstream ships
-# Chart-template.yaml + file:// / OCI subchart deps that are only resolved into a
-# final Chart.yaml at upstream release time; the packaged 0.9.11 chart already has
-# every subchart (kmcp, kagent-tools, agents, oauth2-proxy) bundled under its own
-# charts/ dir. CRDs are NOT part of this chart — upstream ships them separately
-# (kagent-crds + kmcp-crds); we vendor those into helm/kagent/crds below.
-- path: helm/kagent/charts/kagent
+# Stage 1: pristine upstream artifacts. Nothing here is published; the flatten
+# below copies from it, and sync/sync.sh diffs it against the chart to produce
+# diffs/, so a reviewer of a version bump sees the whole delta from upstream.
+- path: vendor
   contents:
-  - path: .
+  # Upstream kagent controller chart. The published OCI chart, not the git tree:
+  # only the release resolves the file:// subchart paths and bundles the
+  # subcharts under charts/. It ships no CRDs.
+  - path: kagent
     helmChart:
       name: kagent
       version: "0.10.0"
       repository:
         url: oci://ghcr.io/kagent-dev/kagent/helm
-# CRDs for the kagent app, vendored as raw upstream YAML into the chart's crds/
-# directory (literal crds/ + Flux `crds: CreateReplace` in the meta-package — the
-# app-owned-CRDs pattern). `helm.sh/resource-policy: keep` is injected into each
-# by the post-sync step (`make sync`) so the files are committed with the
-# annotation; this is a deliberate, reproducible mutation of the vendored copies.
-- path: helm/kagent/crds
+  # Upstream kagent-crds chart: the kagent.dev CRDs plus the kmcp MCPServer CRD
+  # under charts/kmcp-crds/. Same tag as the chart above (sync/verify.sh).
+  - path: kagent-crds
+    helmChart:
+      name: kagent-crds
+      version: "0.10.0"
+      repository:
+        url: oci://ghcr.io/kagent-dev/kagent/helm
+
+# Stage 2: flatten the upstream controller chart onto the chart root, so
+# consumers set upstream keys at the top level (controller.*) with no wrapper
+# nesting. ignorePaths lists the files this repo owns; vendir leaves those
+# alone instead of deleting them as unmanaged content. sync/sync.sh then
+# re-applies the Giant Swarm delta (see sync/patches/).
+- path: helm/kagent
   contents:
-  # kagent.dev CRDs (Agent, AgentHarness, ModelConfig, ModelProviderConfig,
-  # RemoteMCPServer, Memory, ToolServer, SandboxAgent) from the kagent git tag.
-  - path: kagent.dev
-    git:
-      url: https://github.com/kagent-dev/kagent
-      ref: v0.10.0
-    includePaths:
-    - helm/kagent-crds/templates/*.yaml
-    newRootPath: helm/kagent-crds/templates
-  # kmcp MCPServer CRD (kagent.dev/MCPServer). Upstream's kagent-crds chart
-  # depends on kmcp-crds; kagent 0.9.11 pins kmcp v0.3.0 (kagent go.mod), so the
-  # CRD is vendored from that matching kmcp tag.
-  - path: kmcp
-    git:
-      url: https://github.com/kagent-dev/kmcp
-      ref: v0.3.0
-    includePaths:
-    - helm/kmcp-crds/templates/mcpserver-crd.yaml
-    newRootPath: helm/kmcp-crds/templates
+  - path: .
+    directory:
+      path: vendor/kagent
+    # Chart.yaml is repo-owned (sync/patches/chart-yaml writes the dependency
+    # list); upstream's unit tests are not run here.
+    excludePaths:
+    - Chart.lock
+    - Chart-template.yaml
+    - tests/**/*
+    ignorePaths:
+    - Chart.yaml
+    # App-owned CRDs, written by sync/patches/crds from vendor/kagent-crds.
+    - crds/*/*.yaml
+    # Repo-owned docs and generated schema.
+    - README.md
+    - README.md.gotmpl
+    - .kube-linter.yaml
+    - .schema.yaml
+    - values.schema.json
+    - zz_generated.app-platform.values.yaml
+
+# Stage 2b: the CRD chart, the optional Helm-managed CRD lifecycle path.
+# sync/patches/crds injects `keep` and copies the kmcp MCPServer CRD into
+# templates/. The substrate CRDs are not shipped (substrate.enabled is false
+# upstream and in every consumer).
+- path: helm/kagent-crds
+  contents:
+  - path: .
+    directory:
+      path: vendor/kagent-crds
+    excludePaths:
+    - Chart.lock
+    - Chart-template.yaml
+    - charts/**/*
+    - templates/NOTES.txt
+    ignorePaths:
+    - Chart.yaml
+    - README.md
+    - README.md.gotmpl
+    - templates/_helpers.tpl
+    - templates/mcpserver-crd.yaml
+    # app-build-suite's F0001 requires a values schema; the pre-commit hook
+    # generates it from values.yaml + .schema.yaml.
+    - values.yaml
+    - .schema.yaml
+    - values.schema.json
+    - zz_generated.app-platform.values.yaml

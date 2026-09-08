@@ -1,6 +1,0 @@
-dependencies:
-- name: kagent
-  repository: file://charts/kagent
-  version: 0.10.0
-digest: sha256:d551de6525bad987096729bf89da9391df44fe43d79ea7187341fd13970ae1f4
-generated: "2026-09-05T13:42:30.349146498+02:00"

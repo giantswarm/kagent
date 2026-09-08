@@ -2,11 +2,10 @@
 # kube-linter configuration for the kagent chart.
 #
 # The controller, UI and bundled agent subcharts are the vendored upstream
-# kagent-dev/kagent chart (charts/kagent). On Giant Swarm clusters the
-# restricted-PSS securityContext is applied via the agent-platform meta-package
-# values (and a Kyverno mutate policy), not baked into this vendor wrapper's
-# defaults, so the static PSS checks are handled at the platform layer — exclude
-# them here to keep the wrapper vendor-agnostic.
+# kagent-dev/kagent chart. On Giant Swarm clusters the restricted-PSS
+# securityContext is applied via the agent-platform meta-package values (and a
+# Kyverno mutate policy), not baked into this chart's defaults, so the static
+# PSS checks are handled at the platform layer. Exclude them here.
 checks:
   exclude:
     - "no-read-only-root-fs"
@@ -15,5 +14,5 @@ checks:
     - "unset-memory-requirements"
     # The vendored upstream subcharts (e.g. grafana-mcp) reference :latest images
     # we don't control; actual subchart enablement/images are driven by the
-    # agent-platform meta-package, not this wrapper's lint-time defaults.
+    # agent-platform meta-package, not this chart's lint-time defaults.
     - "latest-tag"

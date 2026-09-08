@@ -1,7 +1,7 @@
 # Values for the ATS smoke (app-tests-app-config-file in .ats/main.yaml).
 #
-# The smoke proves that the umbrella installs on a bare kind cluster and that
-# the controller comes up, with the same shape the agent-platform meta-package
+# The smoke proves that the chart installs on a bare kind cluster and that the
+# controller comes up, with the same shape the agent-platform meta-package
 # deploys: the bundled declarative agents and the grafana/kmcp MCP servers are
 # off there too (muster fills those roles), so nothing here is smoke-only
 # except the placeholder API key. The built-in kagent-tools tool server stays
@@ -14,41 +14,38 @@
 # secret, the ModelConfig stays Accepted=False without its secret, and the
 # grafana-mcp RemoteMCPServer stays Accepted=False without a Grafana token, so
 # the install would sit at the 30 min timeout.
-kagent:
-  providers:
-    openAI:
-      # Only makes the chart render the kagent-openai Secret the ModelConfig
-      # references, so the controller accepts the ModelConfig. Nothing in the
-      # smoke calls the provider.
-      apiKey: ats-smoke-placeholder
-  kmcp:
-    enabled: false
-  # On: the chart renders the `kagent-tool-server` RemoteMCPServer for it and
-  # tests/ats asserts the controller connects (Accepted=True). The image is the
-  # gsoci mirror helm/kagent/values.yaml points at.
-  kagent-tools:
-    enabled: true
-  grafana-mcp:
-    enabled: false
-  querydoc:
-    enabled: false
-  k8s-agent:
-    enabled: false
-  kgateway-agent:
-    enabled: false
-  istio-agent:
-    enabled: false
-  promql-agent:
-    enabled: false
-  observability-agent:
-    enabled: false
-  argo-rollouts-agent:
-    enabled: false
-  helm-agent:
-    enabled: false
-  cilium-policy-agent:
-    enabled: false
-  cilium-manager-agent:
-    enabled: false
-  cilium-debug-agent:
-    enabled: false
+providers:
+  openAI:
+    # Only makes the chart render the kagent-openai Secret the ModelConfig
+    # references, so the controller accepts the ModelConfig. Nothing in the
+    # smoke calls the provider.
+    apiKey: ats-smoke-placeholder
+kmcp:
+  enabled: false
+# On: the chart renders the `kagent-tool-server` RemoteMCPServer for it and
+# tests/ats asserts the controller connects (Accepted=True). The image is the
+# gsoci mirror values.yaml points at.
+kagent-tools:
+  enabled: true
+grafana-mcp:
+  enabled: false
+k8s-agent:
+  enabled: false
+kgateway-agent:
+  enabled: false
+istio-agent:
+  enabled: false
+promql-agent:
+  enabled: false
+observability-agent:
+  enabled: false
+argo-rollouts-agent:
+  enabled: false
+helm-agent:
+  enabled: false
+cilium-policy-agent:
+  enabled: false
+cilium-manager-agent:
+  enabled: false
+cilium-debug-agent:
+  enabled: false

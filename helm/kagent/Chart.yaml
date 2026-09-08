@@ -2,26 +2,22 @@
 # for details and background.
 
 apiVersion: v2
-
-# Version of the packaged app (upstream kagent release vendored as a subchart).
+# Version of the packaged app (upstream kagent release). Kept in step with the
+# vendored chart by sync/patches/chart-yaml. The image tags do not read it: they
+# read `tag` in values.yaml, pinned from the same vendored version.
 appVersion: 0.10.0
-
 # Make sure your name DOES NOT end in "app" or "-app".
 name: kagent
-
 # Please describe what the app provides in a sentence or two.
-description: Giant Swarm packaging of the upstream kagent-dev/kagent controller (Kubernetes-native AI agent runtime). The upstream app chart is vendored as a subchart; the kagent.dev and kmcp CRDs ship in this chart's crds/ directory so the app owns its CRDs (delivered via Flux CreateReplace).
-
+description: Giant Swarm packaging of the upstream kagent-dev/kagent controller (Kubernetes-native AI agent runtime). The upstream chart is flattened onto the chart root, with its bundled subcharts (kmcp, kagent-tools, agents, oauth2-proxy) under charts/; the kagent.dev and kmcp CRDs ship in this chart's crds/ directory so the app owns its CRDs (delivered via Flux CreateReplace).
 # URL of the GitHub repository that is the source of this Chart.yaml file.
 home: https://github.com/giantswarm/kagent
-
 # If you have an icon/logo, you should add it to https://github.com/giantswarm/web-assets
 # and set the final URL here.
 icon: https://s.giantswarm.io/app-icons/giantswarm/1/light.svg
-
 sources:
-- https://github.com/giantswarm/kagent
-- https://github.com/kagent-dev/kagent
+  - https://github.com/giantswarm/kagent
+  - https://github.com/kagent-dev/kagent
 version: 0.0.0-dev
 annotations:
   # Adapt to 'giantswarm' if this application is not to be deployed by customers
@@ -30,12 +26,69 @@ annotations:
   io.giantswarm.application.managed: "true"
   # used through .Chart.Annotations . Please replace TEAM-NAME with your team's short name, e. g. 'shield'  for team-shield
   io.giantswarm.application.team: bumblebee
+# The bundled upstream subcharts under charts/, with upstream's own condition:
+# gates. Written from the vendored chart by sync/patches/chart-yaml: Helm renders
+# every chart under charts/ but applies a condition only through this list, so
+# without it every agent and tool installs unconditionally. Every repository
+# points at the vendored copy so `helm dependency update` resolves offline.
 dependencies:
-  # Upstream kagent-dev/kagent controller chart, vendored under charts/ by vendir
-  # (the pinned version is tracked in vendir.lock.yml). The published OCI chart is
-  # used, so its own subcharts (kmcp, agents, oauth2-proxy, ...) are bundled and
-  # gated by conditions. CRDs are NOT shipped by this subchart — they live in this
-  # chart's crds/ directory.
-  - name: kagent
-    repository: file://charts/kagent
+  - name: kmcp
+    version: 0.3.0
+    repository: file://charts/kmcp
+    condition: kmcp.enabled
+  - name: substrate
+    version: 0.0.9
+    repository: file://charts/substrate
+    condition: substrate.enabled
+  - name: kagent-tools
+    version: 0.2.1
+    repository: file://charts/kagent-tools
+    condition: kagent-tools.enabled
+  - name: grafana-mcp
     version: 0.10.0
+    repository: file://charts/grafana-mcp
+    condition: grafana-mcp.enabled, observability-agent.enabled
+  - name: k8s-agent
+    version: 0.10.0
+    repository: file://charts/k8s-agent
+    condition: k8s-agent.enabled
+  - name: kgateway-agent
+    version: 0.10.0
+    repository: file://charts/kgateway-agent
+    condition: kgateway-agent.enabled
+  - name: istio-agent
+    version: 0.10.0
+    repository: file://charts/istio-agent
+    condition: istio-agent.enabled
+  - name: promql-agent
+    version: 0.10.0
+    repository: file://charts/promql-agent
+    condition: promql-agent.enabled
+  - name: observability-agent
+    version: 0.10.0
+    repository: file://charts/observability-agent
+    condition: observability-agent.enabled
+  - name: argo-rollouts-agent
+    version: 0.10.0
+    repository: file://charts/argo-rollouts-agent
+    condition: argo-rollouts-agent.enabled
+  - name: helm-agent
+    version: 0.10.0
+    repository: file://charts/helm-agent
+    condition: helm-agent.enabled
+  - name: cilium-policy-agent
+    version: 0.10.0
+    repository: file://charts/cilium-policy-agent
+    condition: cilium-policy-agent.enabled
+  - name: cilium-manager-agent
+    version: 0.10.0
+    repository: file://charts/cilium-manager-agent
+    condition: cilium-manager-agent.enabled
+  - name: cilium-debug-agent
+    version: 0.10.0
+    repository: file://charts/cilium-debug-agent
+    condition: cilium-debug-agent.enabled
+  - name: oauth2-proxy
+    version: ~10.7.0
+    repository: file://charts/oauth2-proxy
+    condition: oauth2-proxy.enabled

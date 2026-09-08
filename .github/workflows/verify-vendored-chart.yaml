@@ -1,0 +1,26 @@
+# Repo-owned, not devctl-generated.
+#
+# sync/sync.sh re-applies the Giant Swarm delta after every `vendir sync`, but
+# nothing forces a contributor or Renovate to run it and the tree stays
+# plausible when they do not. `make verify-sync` (sync/verify.sh lists what it
+# checks) fails the PR instead. It needs no network.
+name: Verify vendored chart
+
+on:
+  pull_request:
+    paths:
+      - 'helm/**'
+      - 'sync/**'
+      - 'vendir.yml'
+      - 'vendir.lock.yml'
+      - 'Makefile.custom.mk'
+  push:
+    branches:
+      - main
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: make verify-sync

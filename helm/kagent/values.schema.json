@@ -3,6 +3,15 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
+        "annotations": {
+            "type": "object",
+            "description": "Additional annotations to add to all Kubernetes deployment resources",
+            "additionalProperties": true
+        },
+        "argo-rollouts-agent": {
+            "type": "object",
+            "additionalProperties": true
+        },
         "baseDomain": {
             "type": "string"
         },
@@ -11,6 +20,18 @@
             "additionalProperties": true
         },
         "chartOperator": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "cilium-debug-agent": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "cilium-manager-agent": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "cilium-policy-agent": {
             "type": "object",
             "additionalProperties": true
         },
@@ -34,6 +55,21 @@
         "clusterID": {
             "type": "string"
         },
+        "controller": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "database": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "extraObjects": {
+            "type": "array",
+            "description": "Additional arbitrary Kubernetes manifests to deploy alongside the chart. Each list entry is rendered through `tpl`, so values may reference the release context (e.g. `{{ include \"kagent.fullname\" . }}`, `{{ .Release.Namespace }}`). Both map and multi-line string entries are supported. Use this to manage resources such as ExternalSecret, HTTPRoute, or NetworkPolicy within the same chart lifecycle without maintaining a separate chart.  To use, replace the empty list below with your manifests, e.g.: extraObjects: - apiVersion: external-secrets.io/v1 kind: ExternalSecret metadata: name: '{{ include \"kagent.fullname\" . }}-openai' namespace: '{{ .Release.Namespace }}' spec: secretStoreRef: name: aws-secretsmanager kind: ClusterSecretStore target: name: kagent-openai data: - secretKey: OPENAI_API_KEY remoteRef: key: prod/kagent/openai property: api_key"
+        },
+        "fullnameOverride": {
+            "type": "string"
+        },
         "gcpProject": {
             "type": "string"
         },
@@ -45,146 +81,176 @@
             "description": "Global values shared between all subcharts",
             "$comment": "Added automatically by 'helm schema' to allow this chart to be used as a Helm dependency, as this schema would otherwise not allow Helm's special 'global' values key."
         },
-        "kagent": {
+        "grafana-mcp": {
             "type": "object",
+            "additionalProperties": true
+        },
+        "helm-agent": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "imagePullPolicy": {
+            "type": "string"
+        },
+        "imagePullSecrets": {
+            "type": "array"
+        },
+        "ipv6": {
+            "type": "object",
+            "description": "Enable IPv6/dual-stack support. When true, configures all components for dual-stack (IPv4+IPv6) networking: - nginx listens on both IPv4 and IPv6 (adds `listen [::]:8080`) - Next.js binds to `::` instead of `0.0.0.0` - Agent pods bind to `::` for dual-stack reachability Leave disabled on clusters where IPv6 is disabled at the kernel level.",
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "istio-agent": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "k8s-agent": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "kagent-tools": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "kgateway-agent": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "kmcp": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "labels": {
+            "type": "object",
+            "description": "Additional labels to add to all Kubernetes resources",
+            "additionalProperties": true
+        },
+        "nameOverride": {
+            "type": "string"
+        },
+        "namespaceOverride": {
+            "type": "string",
+            "description": "Override the namespace Keep kagent core resources in a dedicated namespace separate from the release namespace. Must equal `kagent-tools.namespaceOverride` below."
+        },
+        "nodeSelector": {
+            "type": "object",
+            "description": "Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).",
+            "additionalProperties": true
+        },
+        "oauth2-proxy": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "observability-agent": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "otel": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "podAnnotations": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "podLabels": {
+            "type": "object",
+            "description": "Additional labels to add to all pod templates (merged into pod labels of the controller and UI Deployments; can be overridden per component). Useful for admission policies that require specific labels on pods.",
+            "additionalProperties": true
+        },
+        "podSecurityContext": {
+            "type": "object",
+            "description": "Security context for all pods",
             "additionalProperties": true,
             "properties": {
-                "controller": {
-                    "type": "object",
-                    "additionalProperties": true,
-                    "properties": {
-                        "agentImage": {
-                            "type": "object",
-                            "additionalProperties": true,
-                            "properties": {
-                                "repository": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "goAgentImage": {
-                            "type": "object",
-                            "additionalProperties": true,
-                            "properties": {
-                                "repository": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "image": {
-                            "type": "object",
-                            "additionalProperties": true,
-                            "properties": {
-                                "repository": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "skillsInitImage": {
-                            "type": "object",
-                            "additionalProperties": true,
-                            "properties": {
-                                "repository": {
-                                    "type": "string"
-                                }
-                            }
-                        }
-                    }
+                "runAsNonRoot": {
+                    "type": "boolean"
                 },
-                "fullnameOverride": {
-                    "type": "string"
-                },
-                "kagent-tools": {
+                "seccompProfile": {
                     "type": "object",
-                    "additionalProperties": true,
+                    "additionalProperties": false,
                     "properties": {
-                        "namespaceOverride": {
+                        "type": {
                             "type": "string"
-                        },
-                        "tools": {
-                            "type": "object",
-                            "additionalProperties": true,
-                            "properties": {
-                                "image": {
-                                    "type": "object",
-                                    "additionalProperties": true,
-                                    "properties": {
-                                        "registry": {
-                                            "type": "string"
-                                        },
-                                        "repository": {
-                                            "type": "string"
-                                        }
-                                    }
-                                },
-                                "resources": {
-                                    "type": "object",
-                                    "additionalProperties": true,
-                                    "properties": {
-                                        "limits": {
-                                            "type": "object",
-                                            "additionalProperties": false,
-                                            "properties": {
-                                                "cpu": {
-                                                    "type": "string"
-                                                },
-                                                "ephemeral-storage": {
-                                                    "type": "string"
-                                                },
-                                                "memory": {
-                                                    "type": "string"
-                                                }
-                                            }
-                                        },
-                                        "requests": {
-                                            "type": "object",
-                                            "additionalProperties": false,
-                                            "properties": {
-                                                "cpu": {
-                                                    "type": "string"
-                                                },
-                                                "ephemeral-storage": {
-                                                    "type": "string"
-                                                },
-                                                "memory": {
-                                                    "type": "string"
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "namespaceOverride": {
-                    "type": "string"
-                },
-                "registry": {
-                    "type": "string"
-                },
-                "ui": {
-                    "type": "object",
-                    "additionalProperties": true,
-                    "properties": {
-                        "image": {
-                            "type": "object",
-                            "additionalProperties": true,
-                            "properties": {
-                                "repository": {
-                                    "type": "string"
-                                }
-                            }
                         }
                     }
                 }
             }
         },
+        "promql-agent": {
+            "type": "object",
+            "additionalProperties": true
+        },
         "provider": {
             "type": "string"
         },
+        "providers": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "proxy": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "rbac": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "registry": {
+            "type": "string"
+        },
+        "securityContext": {
+            "type": "object",
+            "description": "Security context for all containers",
+            "additionalProperties": true,
+            "properties": {
+                "allowPrivilegeEscalation": {
+                    "type": "boolean"
+                },
+                "capabilities": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "drop": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "readOnlyRootFilesystem": {
+                    "type": "boolean"
+                }
+            }
+        },
         "subscriptionID": {
             "type": "string"
+        },
+        "substrate": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "substrateWorkerPool": {
+            "type": "object",
+            "description": "Optional Agent Substrate WorkerPool installed by this chart. This is platform capacity and is not owned by individual AgentHarness resources.",
+            "additionalProperties": true
+        },
+        "tag": {
+            "type": "string"
+        },
+        "tolerations": {
+            "type": "array",
+            "description": "Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/)."
+        },
+        "ui": {
+            "type": "object",
+            "additionalProperties": true
         }
     }
 }

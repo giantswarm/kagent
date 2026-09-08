@@ -1,40 +1,57 @@
-# Repo-owned CircleCI additions. The setup workflow in .circleci/config.yml
-# deep-merges this into the generated .circleci/workflows.yml at pipeline time
-# (maps merge, lists append), so jobs added here are appended to the generated
-# `build` workflow. devctl never touches this file.
+# Repo-owned. The setup workflow in .circleci/config.yml deep-merges this file
+# into the generated .circleci/workflows.yml at pipeline runtime, appending
+# these jobs to the generated ones. devctl never touches it.
+#
+# This repo publishes a SECOND chart: kagent-crds, the optional Helm-managed CRD
+# lifecycle path. The generated workflow only knows about the chart named after
+# the repository, so the crds chart needs its own build and push jobs here. Both
+# charts are cut from the same tag, so they always carry the same version.
+#
+# explicit_allow_chart_name_mismatch is required: the orb otherwise enforces
+# that the chart name equals the repository name (optionally with an "-app"
+# suffix), and "kagent-crds" does not.
 version: 2.1
-
-jobs:
-  # `helm lint`, `helm template` and `helm package` all pass when the version
-  # strings in the chart metadata disagree with the vendored upstream tree, and
-  # when the vendored CRDs have lost `helm.sh/resource-policy: keep`. A dependency
-  # bump that edits vendir.yml and runs `vendir sync` without `make sync` produces
-  # both: a chart that claims one upstream kagent release and contains another,
-  # and CRDs that no longer carry an annotation the README promises. They also
-  # pass when the bundled kagent-tools renders into a different namespace than
-  # the kagent-tool-server RemoteMCPServer URL names (hack/verify-tools-namespace.sh
-  # renders the agent-platform layout, which ATS cannot exercise). This job is
-  # the gate. cimg/base already carries mikefarah yq; helm is installed for the
-  # render check.
-  verify-vendored-tree:
-    docker:
-    - image: cimg/base:current
-    resource_class: small
-    steps:
-    - checkout
-    - run:
-        name: Install helm
-        command: |
-          curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | DESIRED_VERSION=v3.21.4 bash
-          helm version --short
-    - run:
-        name: Verify the vendored kagent tree and the rendered chart
-        command: make verify
 
 workflows:
   build:
     jobs:
-    - verify-vendored-tree:
+
+    # Branch: package + lint the crds chart, no push. Mirrors build-chart.
+    - architect/push-to-app-catalog:
+        executor: app-build-suite
+        context: architect
+        name: build-crds-chart
+        app_catalog: giantswarm-catalog
+        app_catalog_test: giantswarm-test-catalog
+        chart: kagent-crds
+        explicit_allow_chart_name_mismatch: true
+        # The chart vendors an upstream release and declares that release as
+        # its appVersion, so app-build-suite must not stamp this repo's own
+        # chart version over it. The generated jobs for the main chart get the
+        # same from devctl (chart-only repo).
+        override_app_version: false
+        push_to_appcatalog: false
+        push_to_oci_registry: false
         filters:
           tags:
             only: /^v.*/
+          branches:
+            ignore:
+            - main
+
+    # Tag: publish the crds chart. It carries no images, so unlike the main
+    # chart it does not have to wait on an image push.
+    - architect/push-to-app-catalog:
+        executor: app-build-suite
+        context: architect
+        name: push-crds-chart-release
+        app_catalog: giantswarm-catalog
+        app_catalog_test: giantswarm-test-catalog
+        chart: kagent-crds
+        explicit_allow_chart_name_mismatch: true
+        override_app_version: false
+        filters:
+          tags:
+            only: /^v.*/
+          branches:
+            ignore: /.*/
