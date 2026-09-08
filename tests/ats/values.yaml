@@ -4,9 +4,11 @@
 # controller comes up, with the same shape the agent-platform meta-package
 # deploys: the bundled declarative agents and the grafana/kmcp MCP servers are
 # off there too (muster fills those roles), so nothing here is smoke-only
-# except the placeholder API key. The built-in kagent-tools tool server stays
-# ON: the smoke waits for its RemoteMCPServer to be Accepted, which proves the
-# controller reaches the tool server the chart renders.
+# except the placeholder API key and the placeholder OIDC client. The built-in
+# kagent-tools tool server stays ON: the smoke waits for its RemoteMCPServer to
+# be Accepted, which proves the controller reaches the tool server the chart
+# renders. oauth2-proxy is ON as it is on every management cluster: the smoke
+# asserts its Deployment runs the gsoci mirror image and is available.
 #
 # Why these values are needed at all: Helm 4's `--wait` (ATS installs with
 # `helm upgrade --install --wait`) tracks the release's custom resources as
@@ -49,3 +51,22 @@ cilium-manager-agent:
   enabled: false
 cilium-debug-agent:
   enabled: false
+# On, with a placeholder client and OIDC discovery skipped (the fake issuer is
+# never contacted; nothing in the smoke logs in). Proves the bundled subchart
+# pulls its image from the gsoci mirror values.yaml points at
+# (giantswarm/kagent#68) and passes its readiness probe. extraArgs is a map, so
+# these merge over the chart's defaults and replace the $(OIDC_*) env references.
+oauth2-proxy:
+  enabled: true
+  config:
+    clientID: ats-smoke
+    clientSecret: ats-smoke-placeholder
+    # oauth2-proxy requires 16, 24 or 32 bytes.
+    cookieSecret: ats-smoke-placeholder-cookie-32c
+  extraArgs:
+    oidc-issuer-url: https://dex.ats-smoke.invalid
+    redirect-url: https://kagent.ats-smoke.invalid/oauth2/callback
+    skip-oidc-discovery: true
+    login-url: https://dex.ats-smoke.invalid/auth
+    redeem-url: https://dex.ats-smoke.invalid/token
+    oidc-jwks-url: https://dex.ats-smoke.invalid/keys

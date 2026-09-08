@@ -335,6 +335,8 @@ Giant Swarm packaging of the upstream kagent-dev/kagent controller (Kubernetes-n
 | grafana-mcp.resources.limits.cpu | string | `"500m"` |  |
 | grafana-mcp.resources.limits.memory | string | `"512Mi"` |  |
 | oauth2-proxy.enabled | bool | `false` |  |
+| oauth2-proxy.image.registry | string | `"gsoci.azurecr.io"` |  |
+| oauth2-proxy.image.repository | string | `"giantswarm/oauth2-proxy"` |  |
 | oauth2-proxy.sessionStorage.type | string | `"cookie"` |  |
 | oauth2-proxy.extraVolumes[0].name | string | `"custom-templates"` |  |
 | oauth2-proxy.extraVolumes[0].configMap.name | string | `"kagent-oauth2-proxy-templates"` |  |

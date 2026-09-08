@@ -1,6 +1,6 @@
 """ATS smoke for the kagent chart.
 
-Three things are proven on the kind cluster ATS installs the chart into:
+Four things are proven on the kind cluster ATS installs the chart into:
 
   1. the kagent-controller Deployment comes up (test_pods_available);
   2. the controller can run an Agent (test_declarative_agent_reaches_ready):
@@ -10,7 +10,11 @@ Three things are proven on the kind cluster ATS installs the chart into:
   3. the controller reaches the bundled kagent-tools tool server
      (test_builtin_tool_server_accepted): the `kagent-tool-server`
      RemoteMCPServer the chart renders points at a Service that exists and
-     becomes `Accepted` with discovered tools.
+     becomes `Accepted` with discovered tools;
+  4. the bundled oauth2-proxy runs the gsoci mirror image and is available
+     (test_oauth2_proxy_runs_mirror_image): the subchart composes its image
+     from its own keys, not the chart's `registry`, so a values regression
+     would put it back on quay.io.
 
 The second test exists because the first one cannot see the class of bug
 upstream 0.10.0 shipped into this chart (giantswarm/kagent#63): declarative
@@ -561,3 +565,53 @@ def test_builtin_tool_server_accepted(
         len(tools),
         sorted(t.get("name", "") for t in tools)[:5],
     )
+
+
+# ---------------------------------------------------------------------------
+# oauth2-proxy image smoke
+# ---------------------------------------------------------------------------
+
+# `<release>-oauth2-proxy`: the bundled subchart's fullname under the `kagent`
+# release ATS installs.
+OAUTH2_PROXY_DEPLOYMENT = "kagent-oauth2-proxy"
+# retagger mirrors quay.io/oauth2-proxy/oauth2-proxy here
+# (giantswarm/retagger images/skopeo-quay-io.yaml); values.yaml points the
+# subchart's image.registry/repository at it.
+OAUTH2_PROXY_IMAGE_PREFIX = "gsoci.azurecr.io/giantswarm/oauth2-proxy:"
+
+
+@pytest.mark.smoke
+def test_oauth2_proxy_runs_mirror_image(
+    kube_cluster: Cluster, deployment: List[pykube.Deployment]
+) -> None:
+    """The bundled oauth2-proxy (enabled by tests/ats/values.yaml with a
+    placeholder client and OIDC discovery skipped) runs the gsoci mirror image
+    and has its replicas available.
+
+    The subchart composes its image from its own image.registry and
+    image.repository and does not inherit the chart's `registry`; at the
+    upstream default the pod pulled quay.io/oauth2-proxy/oauth2-proxy, which
+    the restrict-image-registries Kyverno policy audits on every management
+    cluster and a registry egress allowlist refuses (giantswarm/kagent#68).
+    """
+    kube_client = kube_cluster.kube_client
+    proxy = pykube.Deployment.objects(kube_client, namespace=namespace_name).get_or_none(
+        name=OAUTH2_PROXY_DEPLOYMENT
+    )
+    assert proxy is not None, (
+        f"Deployment {namespace_name}/{OAUTH2_PROXY_DEPLOYMENT} is missing; "
+        "tests/ats/values.yaml enables oauth2-proxy"
+    )
+    images = [
+        c["image"] for c in proxy.obj["spec"]["template"]["spec"].get("containers") or []
+    ]
+    assert any(image.startswith(OAUTH2_PROXY_IMAGE_PREFIX) for image in images), (
+        f"Deployment {namespace_name}/{OAUTH2_PROXY_DEPLOYMENT} runs {images}; expected "
+        f"{OAUTH2_PROXY_IMAGE_PREFIX}* -- keep oauth2-proxy.image.registry and "
+        ".repository in helm/kagent/values.yaml on the gsoci mirror (giantswarm/kagent#68)"
+    )
+    logger.info("oauth2-proxy image is %s", images)
+    for dep in wait_for_deployments_to_run(
+        kube_client, [OAUTH2_PROXY_DEPLOYMENT], namespace_name, timeout
+    ):
+        assert int(dep.obj["status"]["readyReplicas"]) == int(dep.obj["spec"]["replicas"])

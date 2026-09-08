@@ -51,6 +51,8 @@ expect '.ui.image.repository' 'kagent-ui'
 expect '."kagent-tools".namespaceOverride' 'kagent'
 expect '."kagent-tools".tools.image.registry' 'gsoci.azurecr.io'
 expect '."kagent-tools".tools.image.repository' 'giantswarm/kagent-tools'
+expect '."oauth2-proxy".image.registry' 'gsoci.azurecr.io'
+expect '."oauth2-proxy".image.repository' 'giantswarm/oauth2-proxy'
 
 # The CRD chart is cut from the same upstream tag as the controller chart, so
 # the two vendored versions move together.
@@ -192,6 +194,18 @@ if command -v helm >/dev/null 2>&1 ; then
 		done
 	else
 		note "helm template of ${chart} failed: ${tools_render}"
+	fi
+	# The bundled oauth2-proxy subchart composes its image from its own
+	# image.registry and image.repository (upstream default
+	# quay.io/oauth2-proxy/oauth2-proxy), which the restrict-image-registries
+	# Kyverno policy audits; values.yaml points both at the gsoci mirror, so the
+	# rendered Deployment has to pull from there.
+	if proxy_render=$(helm template kagent "${chart}" --namespace agent-platform --set oauth2-proxy.enabled=true 2>&1) ; then
+		image=$(echo "${proxy_render}" | yq 'select(.kind == "Deployment" and .metadata.name == "kagent-oauth2-proxy") | .spec.template.spec.containers[0].image' | tr -d '"')
+		[[ "${image}" == gsoci.azurecr.io/giantswarm/oauth2-proxy:* ]] \
+			|| note "kagent-oauth2-proxy renders image '${image}'; expected gsoci.azurecr.io/giantswarm/oauth2-proxy:<tag> -- keep oauth2-proxy.image.registry/repository in values.yaml on the mirror"
+	else
+		note "helm template of ${chart} with oauth2-proxy.enabled=true failed: ${proxy_render}"
 	fi
 else
 	echo "helm not found; skipping the kagent-tools namespace render check"
