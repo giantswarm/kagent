@@ -86,6 +86,49 @@ This chart is consumed by the agent-platform meta-package. It can also be
 installed standalone via the Giant Swarm App Platform once published to the
 catalog.
 
+## Keyless OpenAI-compatible endpoints
+
+A `ModelConfig` with `provider: OpenAI` and an `openAI.baseUrl` that points at a
+keyless endpoint (an in-cluster vLLM `InferenceService`, LiteLLM, a corporate
+proxy) reconciles to `Accepted`, but every Agent that references it crashloops
+at boot:
+
+```
+failed to create LLM: OPENAI_API_KEY environment variable is not set
+```
+
+The vendored Go ADK runtime requires `OPENAI_API_KEY` for `provider: OpenAI`
+even when `baseUrl` is set, and the controller renders no key when
+`spec.apiKeySecret` is absent. Until the upstream fix
+(<https://github.com/kagent-dev/kagent/pull/2739>) is released and vendored,
+ship a placeholder secret and reference it from the `ModelConfig`:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: vllm-placeholder-key
+  namespace: kagent
+stringData:
+  OPENAI_API_KEY: unused
+---
+apiVersion: kagent.dev/v1alpha2
+kind: ModelConfig
+metadata:
+  name: vllm
+  namespace: kagent
+spec:
+  provider: OpenAI
+  model: <model served by the endpoint>
+  apiKeySecret: vllm-placeholder-key
+  apiKeySecretKey: OPENAI_API_KEY
+  openAI:
+    baseUrl: http://<service>.<namespace>.svc/v1
+```
+
+The endpoint ignores the key. Tracked in
+[#57](https://github.com/giantswarm/kagent/issues/57).
+
 ## Credit
 
 - Upstream: <https://github.com/kagent-dev/kagent>
