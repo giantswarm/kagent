@@ -1,12 +1,7 @@
 #!/usr/bin/env bash
 
-# Fail when the tree does not match what sync/sync.sh produces.
-#
-# The Giant Swarm delta is not a layer of its own any more: sync/sync.sh
-# re-applies it after every `vendir sync`. Nothing forces a contributor (or
-# Renovate) to run that script, and the tree stays plausible when they do not,
-# so this check runs in CI instead. It needs no network: it compares files that
-# are already in the tree, and renders the chart with helm.
+# Fail when the tree does not match what sync/sync.sh produces. Runs in CI
+# without network: it compares files already in the tree and renders the chart.
 #
 #   ./sync/verify.sh                 the CI gate (vendor/ absent)
 #   ./sync/verify.sh --with-vendor   also compare against vendor/ (run by sync.sh)

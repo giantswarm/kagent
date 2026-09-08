@@ -8,26 +8,16 @@ repo_dir=$(git rev-parse --show-toplevel) ; readonly repo_dir
 
 cd "${repo_dir}"
 
-# Two CRD delivery paths ship from the same pristine manifests:
+# Two CRD delivery paths ship from the same pristine manifests: helm/kagent/crds/
+# (app-owned, applied with Flux `crds: CreateReplace`) and
+# helm/kagent-crds/templates/ (Helm-managed lifecycle). Both get
+# helm.sh/resource-policy: keep, so an uninstall or a Flux prune never
+# cascade-deletes the kagent custom resources. The kmcp MCPServer CRD comes
+# from the kmcp-crds subchart bundled in the upstream kagent-crds chart; the
+# controller registers the type.
 #
-#   * helm/kagent/crds/ -- app-owned CRDs. Helm never upgrades a crds/ dir on
-#     its own, so consumers apply this chart with Flux `crds: CreateReplace`.
-#     The kagent.dev/ and kmcp/ subdirectories separate the two upstream
-#     sources.
-#   * helm/kagent-crds/templates/ -- the optional Helm-managed lifecycle, for
-#     consumers that let Helm own the CRDs and disable the dir above.
-#
-# Both get helm.sh/resource-policy: keep, so a `helm uninstall` or a Flux prune
-# never cascade-deletes every kagent custom resource in the cluster.
-#
-# The kmcp MCPServer CRD comes from the kmcp-crds subchart bundled in the
-# upstream kagent-crds chart, at the kmcp version this kagent release depends
-# on. Nothing in the platform enables kmcp, but the controller registers the
-# type and the CRD costs one file; dropping it is a separate cleanup.
-#
-# The edits are anchored text insertions, not `yq -i`: yq re-emits the whole
-# file in its own sequence indentation, which turns a three-line delta into a
-# full-file rewrite and makes an upstream bump unreviewable.
+# Anchored text insertions, not `yq -i`: yq re-emits the file in its own
+# indentation and turns a three-line delta into a full-file rewrite.
 set -x
 mkdir -p ./helm/kagent/crds/kagent.dev ./helm/kagent/crds/kmcp ./helm/kagent-crds/templates
 rm -f ./helm/kagent/crds/kagent.dev/*.yaml ./helm/kagent/crds/kmcp/*.yaml

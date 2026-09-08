@@ -9,9 +9,8 @@
 # re-applies the Giant Swarm delta from sync/patches/, and rewrites diffs/ so
 # the review of the bump shows the whole delta from upstream.
 #
-# Every patch under sync/patches/ is either an anchored text replacement that
-# fails loudly when upstream reworks the file, or a copy of a repo-owned file.
-# Nothing here edits a vendored file in place with line-addressed sed.
+# Every patch under sync/patches/ is an anchored text replacement that fails
+# loudly when upstream reworks the file.
 
 set -o errexit
 set -o nounset
@@ -24,13 +23,9 @@ set -x
 vendir sync
 { set +x; } 2>/dev/null
 
-# Trailing whitespace and a missing final newline in a vendored file would be
-# rewritten by the trailing-whitespace / end-of-file-fixer pre-commit hooks,
-# which do not skip the chart root (only helm/*/charts/). Normalise here so the
-# hooks are a no-op and the tree does not flip between two resting formats.
-# This runs before the patches, so the repo-owned values.yaml and the copy of it
-# in the chart stay byte-identical (`make verify-sync` compares them). The
-# bundled subcharts under helm/kagent/charts/ are left as upstream ships them.
+# The trailing-whitespace and end-of-file-fixer pre-commit hooks skip only
+# helm/*/charts/, so the vendored files at the chart root are normalised here
+# and the tree does not flip between two resting formats.
 ./sync/normalize.py vendor/kagent/templates vendor/kagent/values.yaml vendor/kagent-crds/templates \
 	helm/kagent/templates helm/kagent/values.yaml helm/kagent/files helm/kagent-crds/templates sync
 
@@ -40,9 +35,7 @@ vendir sync
 ./sync/patches/chart-yaml/patch.sh
 ./sync/patches/crds/patch.sh
 
-# The dependency list is the only part of the repo-owned Chart.yaml that comes
-# from upstream, and it is what gates the bundled subcharts. Check it right
-# after the patch, while vendor/ is present.
+# The vendor/ half of the checks can only run here, while vendor/ is present.
 ./sync/verify.sh --with-vendor
 
 # Store the delta from upstream, one patch file per changed file, so a reviewer

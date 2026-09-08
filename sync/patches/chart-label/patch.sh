@@ -8,18 +8,15 @@ repo_dir=$(git rev-parse --show-toplevel) ; readonly repo_dir
 
 cd "${repo_dir}"
 
-# Both version labels now carry OUR chart version, not the upstream one.
-# helm-controller renders a chart pulled from an OCIRepository with the digest
-# appended (`0.2.0+abc123`), and `+` is not valid in a label value; upstream
-# sanitises it on `helm.sh/chart` but not on `app.kubernetes.io/version`, so
-# the install would fail at apply time. In a branch build the version is also a
-# long git-replaced string, and upstream's `trunc 63 | trimSuffix "-"` can cut
-# inside a separator and emit a label that ends in a non-alphanumeric, which
-# Kubernetes rejects. Strip every trailing non-alphanumeric on both.
+# Both version labels carry this repo's chart version. helm-controller renders
+# a chart pulled from an OCIRepository as `0.2.0+abc123`, and `+` is not valid
+# in a label value; upstream sanitises it on `helm.sh/chart` but not on
+# `app.kubernetes.io/version`. A branch build's long version can also be cut
+# by `trunc 63` on a separator, which Kubernetes rejects. Strip every trailing
+# non-alphanumeric on both.
 #
-# The replacement asserts on the exact upstream text, so the sync fails loudly
-# if upstream reworks the helper and the fix can never be lost silently. It is
-# done in python rather than as a stored .patch because the repo's
+# Anchored on the exact upstream text, so the sync fails loudly if upstream
+# reworks the helper. Python rather than a stored .patch because the
 # trailing-whitespace pre-commit hook rewrites .patch files.
 set -x
 python3 - <<'PY'

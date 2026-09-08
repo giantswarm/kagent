@@ -8,13 +8,9 @@ repo_dir=$(git rev-parse --show-toplevel) ; readonly repo_dir
 
 cd "${repo_dir}"
 
-# app-build-suite's Giant Swarm validator (C0001: HasTeamLabel) requires the
-# team label, read from the Chart annotation, in the chart's
-# templates/_helpers.tpl, which is upstream's file here. Add the label to the
-# upstream common-labels helper, so every resource the chart renders carries it.
-#
-# The replacement asserts on the exact upstream text, so the sync fails loudly
-# if upstream reworks the helper.
+# app-build-suite's C0001 (HasTeamLabel) requires the team label, read from the
+# Chart annotation, in templates/_helpers.tpl. Anchored on the exact upstream
+# text, so the sync fails loudly if upstream reworks the helper.
 set -x
 python3 - <<'PY'
 path = "helm/kagent/templates/_helpers.tpl"
