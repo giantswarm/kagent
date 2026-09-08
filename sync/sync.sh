@@ -48,7 +48,10 @@ vendir sync
 # Store the delta from upstream, one patch file per changed file, so a reviewer
 # of a version bump reads what we change instead of guessing it. Repo-owned
 # files (chart metadata, generated docs and schema, app-owned CRDs) and the
-# untouched bundled subcharts are skipped: they have no delta to show.
+# untouched bundled subcharts are skipped: they have no delta to show. The CRD
+# chart's templates are skipped too: their only delta is the fixed keep
+# annotation and labels include that sync/patches/crds writes, and
+# sync/verify.sh asserts it file by file against crds/.
 rm -f ./diffs/*
 for chart in kagent kagent-crds ; do
 	for f in $(git --no-pager diff --no-exit-code --no-color --no-index "vendor/${chart}" "helm/${chart}" --name-only) ; do
@@ -62,6 +65,7 @@ for chart in kagent kagent-crds ; do
 		[[ "$f" == "helm/${chart}/zz_generated.app-platform.values.yaml" ]] && continue
 		[[ "$f" =~ ^helm/${chart}/crds/.* ]] && continue
 		[[ "$f" =~ ^helm/${chart}/charts/.* ]] && continue
+		[[ "$chart" == "kagent-crds" && "$f" =~ ^helm/${chart}/templates/.*\.yaml$ ]] && continue
 
 		base_file="vendor/${chart}/${f#"helm/${chart}/"}"
 		[[ ! -e $base_file ]] && base_file="/dev/null"
