@@ -1,0 +1,389 @@
+diff --git a/vendor/kagent/values.yaml b/helm/kagent/values.yaml
+index 3fda5bf..de8a3b2 100644
+--- a/vendor/kagent/values.yaml
++++ b/helm/kagent/values.yaml
+@@ -1,4 +1,19 @@
+-# Default values for kagent
++# Values for the kagent chart. This file is repo-owned in full: it is the
++# upstream kagent values with the Giant Swarm defaults applied, plus the
++# `# @schema` annotations the values.schema.json generator reads and the
++# Renovate marker on the image tag. sync/sync.sh copies it over the vendored
++# values.yaml; on an upstream bump, diffs/helm__kagent__values.yaml.patch shows
++# the upstream keys to port here by hand.
++#
++# Only Giant-Swarm-wide defaults live here (registry, flat image repositories,
++# pinned tag, naming, the kagent-tools namespace). Cluster-specific wiring
++# (controller auth mode, metrics env, model providers, oauth2-proxy, OTel) stays
++# in the agent-platform meta-package.
++#
++# Every bundled subchart block is a free-form object in the schema
++# (skipProperties; Helm validates the subchart's own defaults, merged under its
++# key, against this chart's schema), and so is every upstream block whose full
++# key set is not spelled out below, so a consumer can set any upstream key.
+
+ # ==============================================================================
+ # GLOBAL CONFIGURATION
+@@ -14,43 +29,57 @@
+ ipv6:
+   enabled: false
+
+-tag: ""
+-registry: "ghcr.io"
++# Global image tag for the controller, the UI and the agent runtime images the
++# controller hands out (IMAGE_TAG, SKILLS_INIT_IMAGE_TAG, GO_IMAGE_TAG). Every
++# one of those templates coalesces this key first and .Chart.Version last, and
++# the chart version is this repo's own, so the pin is load-bearing. Written
++# from the vendir.yml pin by sync/patches/values; `make verify-sync` fails when
++# the two disagree.
++# renovate: datasource=docker depName=ghcr.io/kagent-dev/kagent/helm/kagent
++tag: "0.10.0"
++# Pull kagent images from the Giant Swarm retagged registry. retagger mirrors
++# them under flat names (kagent-controller, kagent-app, ...), not the upstream
++# kagent-dev/kagent/* hierarchy, so every repository below is the flat name.
++registry: gsoci.azurecr.io/giantswarm
+
+ imagePullSecrets: []
+ imagePullPolicy: IfNotPresent
+
+ nameOverride: ""
+-fullnameOverride: ""
++# Pin the release-independent name so the controller Service is always
++# `kagent-controller` regardless of the release name.
++fullnameOverride: kagent
+
+ # -- Override the namespace
+ # @default -- `.Release.Namespace`
+-namespaceOverride: ""
++# Keep kagent core resources in a dedicated namespace separate from the release
++# namespace. Must equal `kagent-tools.namespaceOverride` below.
++namespaceOverride: kagent
+
+ # -- Additional annotations to add to all Kubernetes deployment resources
+-annotations: {}
++annotations: {}  # @schema additionalProperties: true
+
+-podAnnotations: {}
++podAnnotations: {}  # @schema additionalProperties: true
+
+ # -- Additional labels to add to all pod templates (merged into pod labels of
+ # the controller and UI Deployments; can be overridden per component).
+ # Useful for admission policies that require specific labels on pods.
+-podLabels: {}
++podLabels: {}  # @schema additionalProperties: true
+
+ # -- Additional labels to add to all Kubernetes resources
+-labels: {}
++labels: {}  # @schema additionalProperties: true
+   # environment: production
+   # team: platform
+
+ # -- Security context for all pods
+-podSecurityContext:
++podSecurityContext:  # @schema additionalProperties: true
+   runAsNonRoot: true
+   seccompProfile:
+     type: RuntimeDefault
+ # fsGroup: 2000
+
+ # -- Security context for all containers
+-securityContext:
++securityContext:  # @schema additionalProperties: true
+   allowPrivilegeEscalation: false
+   readOnlyRootFilesystem: true
+   capabilities:
+@@ -66,13 +95,13 @@ securityContext:
+ tolerations: []
+
+ # -- Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).
+-nodeSelector: {}
++nodeSelector: {}  # @schema additionalProperties: true
+
+ # ==============================================================================
+ # DATABASE CONFIGURATION
+ # ==============================================================================
+
+-database:
++database:  # @schema skipProperties: true; additionalProperties: true
+   postgres:
+     # -- External PostgreSQL connection string.
+     # Is always used if set regardless of the `.bundled.enabled` field.
+@@ -148,7 +177,7 @@ database:
+ # RBAC CONFIGURATION
+ # ==============================================================================
+
+-rbac:
++rbac:  # @schema skipProperties: true; additionalProperties: true
+   # -- Namespaces in which to create Role and RoleBinding resources.
+   # If empty (default), the chart creates cluster-scoped ClusterRole and ClusterRoleBinding
+   # resources and the controller watches all namespaces.
+@@ -161,7 +190,7 @@ rbac:
+ # CONTROLLER CONFIGURATION
+ # ==============================================================================
+
+-controller:
++controller:  # @schema skipProperties: true; additionalProperties: true
+   # -- ServiceAccount settings for the controller pod
+   serviceAccount:
+     # -- Annotations to add to the controller ServiceAccount.
+@@ -216,7 +245,7 @@ controller:
+   a2aBaseUrl: ""
+   agentImage:
+     registry: ""
+-    repository: kagent-dev/kagent/app
++    repository: kagent-app
+     tag: "" # Will default to global, then Chart version
+     pullPolicy: ""
+     # -- Image pull secret name set on agent pods created by the controller
+@@ -224,13 +253,13 @@ controller:
+   # -- The image used by the skills-init container to clone skills from Git and pull OCI skill images.
+   skillsInitImage:
+     registry: ""
+-    repository: kagent-dev/kagent/skills-init
++    repository: kagent-skills-init
+     tag: "" # Will default to global, then Chart version
+     pullPolicy: ""
+   # -- The image used for the Go (ADK) runtime agent.
+   goAgentImage:
+     registry: ""
+-    repository: kagent-dev/kagent/golang-adk
++    repository: golang-adk
+     tag: "" # Will default to global, then Chart version
+     pullPolicy: ""
+   # -- @deprecated Removed in 0.10.0. The A2A SDK now handles SSE buffering and timeouts
+@@ -315,7 +344,7 @@ controller:
+
+   image:
+     registry: ""
+-    repository: kagent-dev/kagent/controller
++    repository: kagent-controller
+     tag: "" # Will default to global, then Chart version
+     pullPolicy: ""
+   resources:
+@@ -408,7 +437,7 @@ controller:
+
+ # -- Optional Agent Substrate WorkerPool installed by this chart. This is platform
+ # capacity and is not owned by individual AgentHarness resources.
+-substrateWorkerPool:
++substrateWorkerPool:  # @schema skipProperties: true; additionalProperties: true
+   create: false
+   name: kagent-default
+   replicas: 1
+@@ -427,7 +456,7 @@ substrateWorkerPool:
+ # UI CONFIGURATION
+ # ==============================================================================
+
+-ui:
++ui:  # @schema skipProperties: true; additionalProperties: true
+   # -- ServiceAccount settings for the UI pod
+   serviceAccount:
+     # -- Annotations to add to the UI ServiceAccount.
+@@ -445,7 +474,7 @@ ui:
+   replicas: 1
+   image:
+     registry: ""
+-    repository: kagent-dev/kagent/ui
++    repository: kagent-ui
+     tag: ""
+     pullPolicy: ""
+   resources:
+@@ -634,7 +663,7 @@ ui:
+ # ==============================================================================
+ # https://kagent.dev/docs/getting-started/configuring-providers
+
+-providers:
++providers:  # @schema skipProperties: true; additionalProperties: true
+   default: openAI
+   # -- Annotations added to the metadata of the generated default ModelConfig
+   # (the one derived from `providers.default`). Omitted from the resource when empty.
+@@ -688,7 +717,7 @@ providers:
+ # KMCP
+ # ==============================================================================
+
+-kmcp:
++kmcp:  # @schema skipProperties: true; additionalProperties: true
+   enabled: true
+   nameOverride: "kmcp"
+   fullnameOverride: "" # Override if desired
+@@ -698,16 +727,27 @@ kmcp:
+ # SUBSTRATE
+ # ==============================================================================
+
+-substrate:
++substrate:  # @schema skipProperties: true; additionalProperties: true
+   enabled: false
+
+ # ==============================================================================
+ # BUILT-IN TOOLS
+ # ==============================================================================
+
+-kagent-tools:
++kagent-tools:  # @schema skipProperties: true; additionalProperties: true
+   enabled: true
+   nameOverride: tools
++  # Keep equal to `namespaceOverride` above. The subchart renders its
++  # Deployment, Services and ServiceAccount into its OWN namespaceOverride
++  # (default: the release namespace), while this chart's `kagent-tool-server`
++  # RemoteMCPServer composes the tool-server URL from THIS chart's namespace
++  # (templates/toolserver-kagent.yaml renders
++  # `http://<tools fullname>.<kagent namespace>:8084/mcp`). Nothing upstream
++  # ties the two together; with a release namespace other than `kagent` the
++  # Service lands in the release namespace, the URL does not resolve and the
++  # RemoteMCPServer stays Accepted=False. `make verify-sync` renders that layout
++  # and fails when the two namespaces disagree.
++  namespaceOverride: kagent
+   replicaCount: 1
+   # -- Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).
+   tolerations: []
+@@ -730,6 +770,26 @@ kagent-tools:
+     limits:
+       memory: 256Mi
+   tools:
++    # The subchart reads its own image keys and does NOT inherit the parent
++    # `registry`. Mirror of ghcr.io/kagent-dev/kagent/tools. `tag` stays unset:
++    # the subchart coalesces it to its own Chart.Version, which is the vendored
++    # kagent-tools version.
++    image:
++      registry: gsoci.azurecr.io
++      repository: giantswarm/kagent-tools
++    # ephemeral-storage requests and limits are required because the cluster
++    # injects a writable /tmp emptyDir (readOnlyRootFilesystem) without a
++    # sizeLimit, which trips require-emptydir-requests-and-limits unless the
++    # mounting container declares ephemeral-storage.
++    resources:
++      requests:
++        cpu: 100m
++        memory: 128Mi
++        ephemeral-storage: 50Mi
++      limits:
++        cpu: "1"
++        memory: 512Mi
++        ephemeral-storage: 512Mi
+     loglevel: "debug"
+     metrics:
+       port: 8085 # Use a different port than the main service port (8084) to avoid duplicate port definitions
+@@ -744,7 +804,7 @@ kagent-tools:
+ # - MCPServer resources and RemoteMCPServer resources with internal k8s URLs
+ # Set this once and the controller will apply it to all agents automatically
+ # Note: RemoteMCPServer resources use user-supplied URLs and do not use this proxy unless the URL is an internal k8s URL.
+-proxy:
++proxy:  # @schema skipProperties: true; additionalProperties: true
+   # Proxy URL for internally-built k8s URLs
+   # Example: "http://proxy.kagent.svc.cluster.local:8080"
+   url: ""
+@@ -753,7 +813,7 @@ proxy:
+ # AGENTS
+ # ==============================================================================
+
+-k8s-agent:
++k8s-agent:  # @schema skipProperties: true; additionalProperties: true
+   enabled: true
+   modelConfigRef: ""
+   memory:
+@@ -766,7 +826,7 @@ k8s-agent:
+       memory: 128Mi
+     limits:
+       memory: 256Mi
+-kgateway-agent:
++kgateway-agent:  # @schema skipProperties: true; additionalProperties: true
+   enabled: true
+   modelConfigRef: ""
+   memory:
+@@ -779,7 +839,7 @@ kgateway-agent:
+       memory: 128Mi
+     limits:
+       memory: 256Mi
+-istio-agent:
++istio-agent:  # @schema skipProperties: true; additionalProperties: true
+   enabled: true
+   modelConfigRef: ""
+   memory:
+@@ -792,7 +852,7 @@ istio-agent:
+       memory: 128Mi
+     limits:
+       memory: 256Mi
+-promql-agent:
++promql-agent:  # @schema skipProperties: true; additionalProperties: true
+   enabled: true
+   modelConfigRef: ""
+   memory:
+@@ -805,7 +865,7 @@ promql-agent:
+       memory: 128Mi
+     limits:
+       memory: 256Mi
+-observability-agent:
++observability-agent:  # @schema skipProperties: true; additionalProperties: true
+   enabled: true
+   modelConfigRef: ""
+   memory:
+@@ -818,7 +878,7 @@ observability-agent:
+       memory: 128Mi
+     limits:
+       memory: 256Mi
+-argo-rollouts-agent:
++argo-rollouts-agent:  # @schema skipProperties: true; additionalProperties: true
+   enabled: true
+   modelConfigRef: ""
+   memory:
+@@ -831,7 +891,7 @@ argo-rollouts-agent:
+       memory: 128Mi
+     limits:
+       memory: 256Mi
+-helm-agent:
++helm-agent:  # @schema skipProperties: true; additionalProperties: true
+   enabled: true
+   modelConfigRef: ""
+   memory:
+@@ -844,7 +904,7 @@ helm-agent:
+       memory: 128Mi
+     limits:
+       memory: 256Mi
+-cilium-policy-agent:
++cilium-policy-agent:  # @schema skipProperties: true; additionalProperties: true
+   enabled: true
+   modelConfigRef: ""
+   memory:
+@@ -857,7 +917,7 @@ cilium-policy-agent:
+       memory: 128Mi
+     limits:
+       memory: 256Mi
+-cilium-manager-agent:
++cilium-manager-agent:  # @schema skipProperties: true; additionalProperties: true
+   enabled: true
+   modelConfigRef: ""
+   memory:
+@@ -870,7 +930,7 @@ cilium-manager-agent:
+       memory: 128Mi
+     limits:
+       memory: 256Mi
+-cilium-debug-agent:
++cilium-debug-agent:  # @schema skipProperties: true; additionalProperties: true
+   enabled: true
+   modelConfigRef: ""
+   memory:
+@@ -888,7 +948,7 @@ cilium-debug-agent:
+ # MCP TOOLS
+ # ==============================================================================
+
+-grafana-mcp:
++grafana-mcp:  # @schema skipProperties: true; additionalProperties: true
+   enabled: true
+   grafana:
+     url: "grafana.kagent:3000/api"
+@@ -909,7 +969,7 @@ grafana-mcp:
+ # Enable oauth2-proxy subchart for OIDC authentication
+ # Requires controller.auth.mode: trusted-proxy
+
+-oauth2-proxy:
++oauth2-proxy:  # @schema skipProperties: true; additionalProperties: true
+   enabled: false
+
+   # Cookie-based sessions (the redis-ha sub-chart is disabled by default;
+@@ -1004,7 +1064,7 @@ oauth2-proxy:
+ # OBSERVABILITY
+ # ==============================================================================
+
+-otel:
++otel:  # @schema skipProperties: true; additionalProperties: true
+   tracing:
+     enabled: false
+     exporter:

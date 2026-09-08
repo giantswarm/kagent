@@ -1,4 +1,4 @@
-"""ATS smoke for the kagent umbrella chart.
+"""ATS smoke for the kagent chart.
 
 Three things are proven on the kind cluster ATS installs the chart into:
 
@@ -51,7 +51,7 @@ AGENT_NAME = "ats-smoke-agent"
 FAKE_API_KEY = "ats-smoke-fake-key"
 # retagger publishes every kagent image flat under gsoci.azurecr.io/giantswarm
 # (images/renamed-kagent.yaml); the Go ADK runtime image is the bare
-# `golang-adk`, which is what `kagent.controller.goAgentImage.repository` maps.
+# `golang-adk`, which is what `controller.goAgentImage.repository` maps.
 GO_ADK_IMAGE_PREFIX = "gsoci.azurecr.io/giantswarm/golang-adk:"
 MODEL_CONFIG_TIMEOUT = 120
 AGENT_DEPLOYMENT_TIMEOUT = 120
@@ -60,7 +60,7 @@ AGENT_READY_TIMEOUT = 600
 # with the reason instead of sitting out the Ready timeout.
 IMAGE_PULL_FAILURES = {"ErrImagePull", "ImagePullBackOff", "InvalidImageName"}
 # The RemoteMCPServer the upstream chart renders for the bundled kagent-tools
-# (`<kagent fullname>-tool-server` in charts/kagent/templates/toolserver-kagent.yaml).
+# (`<kagent fullname>-tool-server` in templates/toolserver-kagent.yaml).
 TOOL_SERVER_NAME = "kagent-tool-server"
 # The controller retries a failed tool-server connection once a minute; the
 # tool-server pod itself needs the image pull plus a 15 s readiness delay.
@@ -313,7 +313,7 @@ def assert_go_adk_image(agent_deployment: pykube.Deployment) -> None:
         f"Deployment {namespace_name}/{agent_deployment.name} runs {images}; expected "
         f"the Go ADK runtime image {GO_ADK_IMAGE_PREFIX}* -- the upstream chart "
         "defaults declarative agents to runtime: go and renders that image from "
-        "controller.goAgentImage, so kagent.controller.goAgentImage.repository in "
+        "controller.goAgentImage, so controller.goAgentImage.repository in "
         "helm/kagent/values.yaml has to stay the flat mirror name `golang-adk` "
         "(giantswarm/kagent#63)"
     )
@@ -508,7 +508,7 @@ def test_builtin_tool_server_accepted(
     at a Service that exists, and the controller reaches it: Accepted=True with
     discovered tools.
 
-    tests/ats/values.yaml enables `kagent.kagent-tools`. The upstream chart
+    tests/ats/values.yaml enables `kagent-tools`. The upstream chart
     composes the RemoteMCPServer URL from its own namespace while the subchart
     renders its Service into its own `namespaceOverride`; helm/kagent/values.yaml
     pins both to `kagent`. The release namespace here is `kagent` as well, so
@@ -532,7 +532,7 @@ def test_builtin_tool_server_accepted(
     assert service is not None, (
         f"RemoteMCPServer {namespace_name}/{TOOL_SERVER_NAME} points at {url}, but there "
         f"is no Service {svc_namespace}/{svc_name}: the kagent-tools subchart renders into "
-        "`kagent.kagent-tools.namespaceOverride` (default: the release namespace) while "
+        "`kagent-tools.namespaceOverride` (default: the release namespace) while "
         "the parent chart composes the URL from `kagent.namespaceOverride` -- the two "
         "must agree (helm/kagent/values.yaml)"
     )

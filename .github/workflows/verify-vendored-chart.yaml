@@ -1,0 +1,43 @@
+# Repo-owned, not devctl-generated.
+#
+# The upstream chart is vendored flat onto helm/kagent, so the Giant Swarm delta
+# is not a layer of its own any more: sync/sync.sh re-applies it after every
+# `vendir sync`. Nothing forces a contributor (or Renovate) to run that script,
+# and the tree stays plausible when they do not, so this job fails the PR
+# instead. `make verify-sync` checks what a skipped sync leaves behind:
+#
+#   - values.yaml back to upstream defaults, which would publish a chart with
+#     the upstream registry, upstream image paths and no image tag pin
+#   - the image tag pin or appVersion out of step with the vendored version
+#   - the bundled-subchart dependency list (with its condition: gates) out of
+#     step with charts/, which would install every agent unconditionally
+#   - the chart-label fix or the team label gone from templates/_helpers.tpl
+#   - helm.sh/resource-policy: keep gone from a CRD, without which a helm
+#     uninstall cascade-deletes every kagent CR on the cluster
+#   - the two CRD delivery paths (crds/ dir and the kagent-crds chart) drifting
+#     apart
+#   - the bundled kagent-tools rendering into a different namespace than the
+#     kagent-tool-server RemoteMCPServer URL names
+#
+# It needs no network: it compares files already in the tree and renders the
+# chart with the helm the runner ships.
+name: Verify vendored chart
+
+on:
+  pull_request:
+    paths:
+      - 'helm/**'
+      - 'sync/**'
+      - 'vendir.yml'
+      - 'vendir.lock.yml'
+      - 'Makefile.custom.mk'
+  push:
+    branches:
+      - main
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: make verify-sync

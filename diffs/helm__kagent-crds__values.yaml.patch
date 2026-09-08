@@ -1,0 +1,22 @@
+diff --git a/vendor/kagent-crds/values.yaml b/helm/kagent-crds/values.yaml
+index 7a97cc1..0967ef4 100644
+--- a/vendor/kagent-crds/values.yaml
++++ b/helm/kagent-crds/values.yaml
+@@ -1,15 +1 @@
+-# Values for the kagent-crds chart
+-
+-# ==============================================================================
+-# KMCP
+-# ==============================================================================
+-
+-kmcp:
+-  enabled: true
+-
+-# ==============================================================================
+-# SUBSTRATE
+-# ==============================================================================
+-
+-substrate:
+-  enabled: false
+\ No newline at end of file
++{}
