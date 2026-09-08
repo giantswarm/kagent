@@ -16,7 +16,9 @@
 # minimal declarative Agent (default ModelConfig, fake provider key) reaches
 # Ready on the flat gsoci Go ADK runtime image, and that the RemoteMCPServer
 # for the bundled kagent-tools points at a Service that exists and becomes
-# Accepted (the controller reaches the tool server).
+# Accepted (the controller reaches the tool server), and that the bundled
+# oauth2-proxy (on, placeholder client, OIDC discovery skipped) runs the gsoci
+# mirror image and is available.
 #
 # functional and upgrade stay skipped: there is no second scenario yet.
 app-tests-deploy-namespace: kagent

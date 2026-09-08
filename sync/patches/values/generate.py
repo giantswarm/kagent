@@ -14,6 +14,8 @@ What the delta is:
   template coalesces `.Values.tag` first and `.Chart.Version` last, and the chart
   version is this repo's own, so the pin is load-bearing;
 * the Giant Swarm registry and the flat mirror names retagger publishes;
+* the gsoci mirror of the oauth2-proxy image, which the bundled subchart
+  composes from its own image keys;
 * `fullnameOverride` and `namespaceOverride`, and the kagent-tools namespace that
   must equal it;
 * `# @schema` annotations: every bundled subchart block (read from the vendored
@@ -160,6 +162,24 @@ replace(
     loglevel: "debug"
     metrics:
       port: 8085""",
+)
+
+replace(
+    "oauth2-proxy:\n  enabled: false\n\n",
+    """oauth2-proxy:
+  enabled: false
+  # The subchart reads its own image keys and does NOT inherit the parent
+  # `registry`; its default is quay.io/oauth2-proxy/oauth2-proxy, which the
+  # restrict-image-registries Kyverno policy on Giant Swarm management clusters
+  # audits and a registry egress allowlist refuses. retagger mirrors that image
+  # to gsoci (giantswarm/retagger images/skopeo-quay-io.yaml, semver >= v7.2.1).
+  # `tag` stays unset: the subchart renders v<its appVersion>, which the mirror
+  # carries. See giantswarm/kagent#68.
+  image:
+    registry: gsoci.azurecr.io
+    repository: giantswarm/oauth2-proxy
+
+""",
 )
 
 FREE_FORM_BLOCKS = ["controller", "ui", "database", "providers", "otel", "rbac", "proxy", "substrateWorkerPool"]

@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The bundled oauth2-proxy pulls its image from the gsoci mirror
+  (`oauth2-proxy.image.registry: gsoci.azurecr.io`,
+  `oauth2-proxy.image.repository: giantswarm/oauth2-proxy`) instead of the
+  subchart default `quay.io/oauth2-proxy/oauth2-proxy`, like every other image
+  the chart renders. The subchart composes the image from its own keys and does
+  not inherit `registry`; the quay.io default tripped the
+  `restrict-image-registries` Kyverno policy (audit) on every
+  `kagent-oauth2-proxy` pod and would not pull behind a registry egress
+  allowlist. The tag is unchanged (`v<subchart appVersion>`, currently
+  v7.15.3, which retagger mirrors), so the upgrade is an image-reference change
+  only. `make verify-sync` asserts both keys and the rendered Deployment image;
+  the ATS smoke enables oauth2-proxy (placeholder client, OIDC discovery
+  skipped) and asserts the `kagent-oauth2-proxy` Deployment runs the mirror and
+  becomes available. (#68)
+
 ### Changed
 
 - The chart is flattened: the upstream kagent chart sits at the chart root instead of under `charts/kagent`, so upstream keys move from `kagent.*` to the top level (`controller.*`, `ui.*`, `kagent-tools.*`, ...). A leftover `kagent:` key fails schema validation. The rendered output for the same effective values is unchanged apart from `helm.sh/chart` and `app.kubernetes.io/version` (this chart's version), the new `application.giantswarm.io/team` label on every resource, and the `checksum/*` pod annotations that hash them. See UPGRADE.md.

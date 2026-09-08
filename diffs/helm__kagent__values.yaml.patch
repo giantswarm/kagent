@@ -1,5 +1,5 @@
 diff --git a/vendor/kagent/values.yaml b/helm/kagent/values.yaml
-index 3fda5bf..1795ff9 100644
+index 3fda5bfc..b7e37289 100644
 --- a/vendor/kagent/values.yaml
 +++ b/helm/kagent/values.yaml
 @@ -1,4 +1,16 @@
@@ -387,16 +387,27 @@ index 3fda5bf..1795ff9 100644
    enabled: true
    grafana:
      url: "grafana.kagent:3000/api"
-@@ -909,7 +964,7 @@ grafana-mcp:
+@@ -909,8 +964,18 @@ grafana-mcp:
  # Enable oauth2-proxy subchart for OIDC authentication
  # Requires controller.auth.mode: trusted-proxy
 
 -oauth2-proxy:
 +oauth2-proxy:  # @schema skipProperties: true; additionalProperties: true
    enabled: false
++  # The subchart reads its own image keys and does NOT inherit the parent
++  # `registry`; its default is quay.io/oauth2-proxy/oauth2-proxy, which the
++  # restrict-image-registries Kyverno policy on Giant Swarm management clusters
++  # audits and a registry egress allowlist refuses. retagger mirrors that image
++  # to gsoci (giantswarm/retagger images/skopeo-quay-io.yaml, semver >= v7.2.1).
++  # `tag` stays unset: the subchart renders v<its appVersion>, which the mirror
++  # carries. See giantswarm/kagent#68.
++  image:
++    registry: gsoci.azurecr.io
++    repository: giantswarm/oauth2-proxy
 
    # Cookie-based sessions (the redis-ha sub-chart is disabled by default;
-@@ -1004,21 +1059,21 @@ oauth2-proxy:
+   # enable `redis-ha.enabled` + `sessionStorage.type: redis` to switch)
+@@ -1004,21 +1069,21 @@ oauth2-proxy:
  # OBSERVABILITY
  # ==============================================================================
 

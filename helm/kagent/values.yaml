@@ -966,6 +966,16 @@ grafana-mcp:  # @schema skipProperties: true; additionalProperties: true
 
 oauth2-proxy:  # @schema skipProperties: true; additionalProperties: true
   enabled: false
+  # The subchart reads its own image keys and does NOT inherit the parent
+  # `registry`; its default is quay.io/oauth2-proxy/oauth2-proxy, which the
+  # restrict-image-registries Kyverno policy on Giant Swarm management clusters
+  # audits and a registry egress allowlist refuses. retagger mirrors that image
+  # to gsoci (giantswarm/retagger images/skopeo-quay-io.yaml, semver >= v7.2.1).
+  # `tag` stays unset: the subchart renders v<its appVersion>, which the mirror
+  # carries. See giantswarm/kagent#68.
+  image:
+    registry: gsoci.azurecr.io
+    repository: giantswarm/oauth2-proxy
 
   # Cookie-based sessions (the redis-ha sub-chart is disabled by default;
   # enable `redis-ha.enabled` + `sessionStorage.type: redis` to switch)
