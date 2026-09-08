@@ -1,14 +1,11 @@
-# Values for the kagent chart. This file is repo-owned in full: it is the
-# upstream kagent values with the Giant Swarm defaults applied, plus the
-# `# @schema` annotations the values.schema.json generator reads and the
-# Renovate marker on the image tag. sync/sync.sh copies it over the vendored
-# values.yaml; on an upstream bump, diffs/helm__kagent__values.yaml.patch shows
-# the upstream keys to port here by hand.
+# Values for the kagent chart, written by sync/patches/values/generate.py from
+# the vendored upstream values: the upstream file with the Giant Swarm defaults
+# applied (registry, flat image repositories, pinned tag, naming, the
+# kagent-tools namespace) and the `# @schema` annotations the values.schema.json
+# generator reads. Edit the generator, not this file; `make sync` rewrites it.
 #
-# Only Giant-Swarm-wide defaults live here (registry, flat image repositories,
-# pinned tag, naming, the kagent-tools namespace). Cluster-specific wiring
-# (controller auth mode, metrics env, model providers, oauth2-proxy, OTel) stays
-# in the agent-platform meta-package.
+# Cluster-specific wiring (controller auth mode, metrics env, model providers,
+# oauth2-proxy, OTel) stays in the agent-platform meta-package.
 #
 # Every bundled subchart block is a free-form object in the schema
 # (skipProperties; Helm validates the subchart's own defaults, merged under its
@@ -33,9 +30,7 @@ ipv6:
 # controller hands out (IMAGE_TAG, SKILLS_INIT_IMAGE_TAG, GO_IMAGE_TAG). Every
 # one of those templates coalesces this key first and .Chart.Version last, and
 # the chart version is this repo's own, so the pin is load-bearing. Written
-# from the vendir.yml pin by sync/patches/values; `make verify-sync` fails when
-# the two disagree.
-# renovate: datasource=docker depName=ghcr.io/kagent-dev/kagent/helm/kagent
+# from the vendir.yml pin; `make verify-sync` fails when the two disagree.
 tag: "0.10.0"
 # Pull kagent images from the Giant Swarm retagged registry. retagger mirrors
 # them under flat names (kagent-controller, kagent-app, ...), not the upstream

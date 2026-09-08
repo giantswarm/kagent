@@ -52,22 +52,25 @@ make verify-sync   # the CI gate: fail when the tree does not match a sync
 
 To bump the upstream version, edit the two pins in `vendir.yml` (`kagent` and
 `kagent-crds`, always equal), run `make sync`, then regenerate the schemas and
-READMEs via pre-commit. Read `diffs/helm__kagent__values.yaml.patch` and port any
-new upstream key into `sync/patches/values/values.yaml`. Requires `vendir`,
-[mikefarah `yq` v4](https://github.com/mikefarah/yq), `helm` and `python3`.
+READMEs via pre-commit. Nothing else is typed: `values.yaml`, the tag pin, the
+dependency list, `appVersion` and the CRDs are all written from the vendored
+tree. A patch fails loudly when upstream moves one of its anchors; that is the
+one case that needs a human. Requires `vendir`,
+[mikefarah `yq` v4](https://github.com/mikefarah/yq), `helm` and `python3` with
+PyYAML.
 
 What the delta is, one patch script per topic under `sync/patches/`:
 
 | Patch | What it does |
 |---|---|
-| `values` | Copies the repo-owned `values.yaml` over the vendored one and writes the global image `tag` from the `vendir.yml` pin. Every upstream image template coalesces `.Values.tag` first and `.Chart.Version` last; the chart version is this repo's own, so the pin is load-bearing. |
+| `values` | Generates `values.yaml` from the vendored upstream file (`generate.py`): the gsoci registry and flat image repositories, `fullnameOverride` and `namespaceOverride`, the kagent-tools namespace and image, the `# @schema` annotations (subchart blocks from the vendored dependency list), and the global image `tag` from the `vendir.yml` pin. Every upstream image template coalesces `.Values.tag` first and `.Chart.Version` last; the chart version is this repo's own, so the pin is load-bearing. |
 | `chart-label` | Sanitises `helm.sh/chart` and `app.kubernetes.io/version` in upstream's common-labels helper: helm-controller renders the chart version as `X.Y.Z+<digest>`, and `+` is invalid in a label. |
 | `team-label` | Adds `application.giantswarm.io/team` to upstream's common-labels helper (app-build-suite `C0001`). |
 | `chart-yaml` | Writes `appVersion` and the bundled-subchart dependency list, with upstream's `condition:` gates, from the vendored chart. |
 | `crds` | Writes `crds/` and `helm/kagent-crds/templates/` from the vendored `kagent-crds` chart, with `keep` injected. |
 
 `make verify-sync` (the `Verify vendored chart` GitHub workflow) checks the result
-without network: the repo-owned `values.yaml` is in place, the tag pin and both
+without network: the Giant Swarm defaults are in `values.yaml`, the tag pin and both
 `appVersion` fields equal the vendored version, no rendered template reads
 `.Chart.Version` without the tag fallback, the dependency list matches `charts/`
 and every entry has a condition, both label fixes and the team label are in the

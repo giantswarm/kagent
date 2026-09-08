@@ -36,11 +36,26 @@ vendored_version() {
 	yq -r ".directories[] | select(.path == \"vendor\").contents[] | select(.path == \"$1\").helmChart.version" vendir.yml
 }
 
-# values.yaml is repo-owned in full. Back at upstream defaults it would publish
-# a chart with the upstream registry, the upstream image paths and no tag pin.
-if ! diff -q sync/patches/values/values.yaml "${chart}/values.yaml" >/dev/null ; then
-	note "${chart}/values.yaml differs from sync/patches/values/values.yaml; run 'make sync'"
-fi
+# values.yaml is generated from the vendored upstream file by
+# sync/patches/values/generate.py. vendor/ is absent in CI, so the Giant Swarm
+# defaults it writes are asserted one by one: back at upstream defaults the
+# chart would publish with the upstream registry and image paths.
+expect() { # expect <yq path> <value>
+	local got
+	got=$(yq -r "$1" "${chart}/values.yaml")
+	[ "${got}" == "$2" ] || note "${chart}/values.yaml has $1 = ${got}, expected $2; run 'make sync'"
+}
+expect '.registry' 'gsoci.azurecr.io/giantswarm'
+expect '.fullnameOverride' 'kagent'
+expect '.namespaceOverride' 'kagent'
+expect '.controller.image.repository' 'kagent-controller'
+expect '.controller.agentImage.repository' 'kagent-app'
+expect '.controller.skillsInitImage.repository' 'kagent-skills-init'
+expect '.controller.goAgentImage.repository' 'golang-adk'
+expect '.ui.image.repository' 'kagent-ui'
+expect '."kagent-tools".namespaceOverride' 'kagent'
+expect '."kagent-tools".tools.image.registry' 'gsoci.azurecr.io'
+expect '."kagent-tools".tools.image.repository' 'giantswarm/kagent-tools'
 
 # The CRD chart is cut from the same upstream tag as the controller chart, so
 # the two vendored versions move together.
@@ -106,6 +121,10 @@ if [ "${with_vendor}" -eq 1 ] ; then
 	want=$(yq -o=json '.dependencies | map({"name": .name, "version": .version, "condition": .condition})' vendor/kagent/Chart.yaml)
 	got=$(yq -o=json '.dependencies | map({"name": .name, "version": .version, "condition": .condition})' "${chart}/Chart.yaml")
 	[ "${want}" == "${got}" ] || note "${chart}/Chart.yaml dependencies drift from vendor/kagent/Chart.yaml; run 'make sync'"
+	generated=$(mktemp)
+	python3 ./sync/patches/values/generate.py ./vendor/kagent/values.yaml ./vendor/kagent/Chart.yaml ./vendir.yml "${generated}"
+	diff -q "${generated}" "${chart}/values.yaml" >/dev/null || note "${chart}/values.yaml is not what sync/patches/values/generate.py writes; run 'make sync'"
+	rm -f "${generated}"
 fi
 
 # Without the chart-label fix helm-controller's +digest chart version, or a

@@ -6,35 +6,15 @@
   // sync/sync.sh from the published kagent chart. Their versions are upstream's
   // choice; bumping them here would be reverted by the next sync.
   ignorePaths: ['helm/*/charts/**'],
-  customManagers: [
-    {
-      // The global image tag is pinned in values.yaml from a marker comment:
-      // every upstream image template coalesces .Values.tag first and
-      // .Chart.Version last, and the chart version is this repo's own.
-      //
-      // Both files are listed on purpose. sync/patches/values/values.yaml is
-      // the source of truth and helm/kagent/values.yaml is the copy that
-      // sync/sync.sh writes, so a bump has to land in both or the next sync
-      // reverts it (and `make verify-sync` fails the PR). depName is the
-      // upstream chart, the same package the vendir manager tracks, so the
-      // pin and the vendir.yml bump land in one PR.
-      customType: 'regex',
-      managerFilePatterns: [
-        'sync/patches/values/values.yaml',
-        'helm/kagent/values.yaml',
-      ],
-      matchStrings: [
-        '# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+tag:\\s*"(?<currentValue>[^"]+)"',
-      ],
-    },
-  ],
   packageRules: [
     {
       // The controller chart and the CRD chart are one upstream release and
       // must move together: bumping only one ships CRDs from a different
-      // release than the controller. `make sync` then rewrites the tag pin and
-      // the chart metadata, and `make verify-sync` (CI) fails if anything is
-      // left inconsistent.
+      // release than the controller. `make sync` then rewrites the tag pin,
+      // values.yaml and the chart metadata from the vendored tree, and
+      // `make verify-sync` (CI) fails if anything is left inconsistent. The
+      // image tag in values.yaml has no Renovate marker: it is written from
+      // the vendir.yml pin.
       matchPackageNames: [
         'ghcr.io/kagent-dev/kagent/helm/kagent',
         'ghcr.io/kagent-dev/kagent/helm/kagent-crds',

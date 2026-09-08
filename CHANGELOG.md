@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `kagent-crds` chart, published from this repo and cut from the same tag: the eight `kagent.dev` CRDs and the kmcp `MCPServer` CRD as templated resources with `helm.sh/resource-policy: keep`, for consumers that let Helm own the CRD lifecycle.
-- `tag` is pinned to the vendored upstream release (Renovate-managed) and checked by `make verify-sync`. Every upstream image template coalesces `.Values.tag` first and `.Chart.Version` last, and the chart version is this repo's own.
+- `tag` is pinned to the vendored upstream release (written by `make sync` from the `vendir.yml` pin) and checked by `make verify-sync`. Every upstream image template coalesces `.Values.tag` first and `.Chart.Version` last, and the chart version is this repo's own.
 - `helm.sh/chart` and `app.kubernetes.io/version` sanitise `+` and trailing non-alphanumerics, so they stay valid labels when helm-controller appends `+<digest>` to the chart version.
 - `application.giantswarm.io/team` on every rendered resource.
 
