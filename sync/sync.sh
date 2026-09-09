@@ -48,7 +48,7 @@ vendir sync
 # are repo-owned files with no upstream counterpart.
 rm -f ./diffs/*
 for chart in kagent ; do
-	for f in $(git --no-pager diff --no-exit-code --no-color --no-index "vendor/${chart}" "helm/${chart}" --name-only) ; do
+	for f in $(git --no-pager diff --no-ext-diff --no-exit-code --no-color --no-index "vendor/${chart}" "helm/${chart}" --name-only) ; do
 		[[ "$f" == "/dev/null" ]] && continue
 		[[ "$f" == "helm/${chart}/Chart.yaml" ]] && continue
 		[[ "$f" == "helm/${chart}/README.md" ]] && continue
@@ -64,7 +64,7 @@ for chart in kagent ; do
 		[[ ! -e $base_file ]] && base_file="/dev/null"
 
 		set +e
-		git --no-pager diff --no-exit-code --no-color --no-index "$base_file" "${f}" \
+		git --no-pager diff --no-ext-diff --no-exit-code --no-color --no-index "$base_file" "${f}" \
 			> "./diffs/${f//\//__}.patch" # ${f//\//__} replaces all "/" with "__"
 		ret=$?
 		set -e

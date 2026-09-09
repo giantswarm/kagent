@@ -1,3 +1,4 @@
 vendor
 .vendir*
 helm/kagent/charts/*.tgz
+helm/kagent/Chart.lock
