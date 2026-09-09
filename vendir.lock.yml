@@ -3,11 +3,11 @@ directories:
 - contents:
   - helmChart:
       appVersion: ""
-      version: 0.10.0
+      version: 0.10.1
     path: kagent
   - helmChart:
       appVersion: ""
-      version: 0.10.0
+      version: 0.10.1
     path: kagent-crds
   path: vendor
 - contents:

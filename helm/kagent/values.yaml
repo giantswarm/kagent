@@ -31,7 +31,7 @@ ipv6:
 # one of those templates coalesces this key first and .Chart.Version last, and
 # the chart version is this repo's own, so the pin is load-bearing. Written
 # from the vendir.yml pin; `make verify-sync` fails when the two disagree.
-tag: "0.10.0"
+tag: "0.10.1"
 # Pull kagent images from the Giant Swarm retagged registry. retagger mirrors
 # them under flat names (kagent-controller, kagent-app, ...), not the upstream
 # kagent-dev/kagent/* hierarchy, so every repository below is the flat name.

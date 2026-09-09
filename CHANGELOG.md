@@ -26,6 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Upstream kagent updated to v0.10.1. Python agents resume correctly after a
+  human-in-the-loop pause again: answering an `ask_user` question or approving a
+  tool call no longer fails with `Tool 'X' does not require confirmation.` and
+  no longer leaves the session with a dangling `tool_use` (kagent-dev/kagent#2731).
 - The chart is flattened: the upstream kagent chart sits at the chart root instead of under `charts/kagent`, so upstream keys move from `kagent.*` to the top level (`controller.*`, `ui.*`, `kagent-tools.*`, ...). A leftover `kagent:` key fails schema validation. The rendered output for the same effective values is unchanged apart from `helm.sh/chart` and `app.kubernetes.io/version` (this chart's version), the new `application.giantswarm.io/team` label on every resource, and the `checksum/*` pod annotations that hash them. See UPGRADE.md.
 - `Chart.yaml` reproduces upstream's bundled-subchart `dependencies` with their `condition:` gates (`kmcp.enabled`, `kagent-tools.enabled`, `oauth2-proxy.enabled`, the agents), pointing every entry at the vendored copy under `charts/`. `make verify-sync` fails when the list drifts from `charts/` or from the vendored chart.
 - The CRDs are vendored from the published upstream `kagent-crds` chart (the same tag as the controller chart) instead of the kagent and kmcp git tags; the kmcp `MCPServer` CRD comes from the `kmcp-crds` subchart bundled in it.

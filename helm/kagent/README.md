@@ -13,20 +13,20 @@ Giant Swarm packaging of the upstream kagent-dev/kagent controller (Kubernetes-n
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://charts/argo-rollouts-agent | argo-rollouts-agent | 0.10.0 |
-| file://charts/cilium-debug-agent | cilium-debug-agent | 0.10.0 |
-| file://charts/cilium-manager-agent | cilium-manager-agent | 0.10.0 |
-| file://charts/cilium-policy-agent | cilium-policy-agent | 0.10.0 |
-| file://charts/grafana-mcp | grafana-mcp | 0.10.0 |
-| file://charts/helm-agent | helm-agent | 0.10.0 |
-| file://charts/istio-agent | istio-agent | 0.10.0 |
-| file://charts/k8s-agent | k8s-agent | 0.10.0 |
+| file://charts/argo-rollouts-agent | argo-rollouts-agent | 0.10.1 |
+| file://charts/cilium-debug-agent | cilium-debug-agent | 0.10.1 |
+| file://charts/cilium-manager-agent | cilium-manager-agent | 0.10.1 |
+| file://charts/cilium-policy-agent | cilium-policy-agent | 0.10.1 |
+| file://charts/grafana-mcp | grafana-mcp | 0.10.1 |
+| file://charts/helm-agent | helm-agent | 0.10.1 |
+| file://charts/istio-agent | istio-agent | 0.10.1 |
+| file://charts/k8s-agent | k8s-agent | 0.10.1 |
 | file://charts/kagent-tools | kagent-tools | 0.2.1 |
-| file://charts/kgateway-agent | kgateway-agent | 0.10.0 |
+| file://charts/kgateway-agent | kgateway-agent | 0.10.1 |
 | file://charts/kmcp | kmcp | 0.3.0 |
 | file://charts/oauth2-proxy | oauth2-proxy | ~10.7.0 |
-| file://charts/observability-agent | observability-agent | 0.10.0 |
-| file://charts/promql-agent | promql-agent | 0.10.0 |
+| file://charts/observability-agent | observability-agent | 0.10.1 |
+| file://charts/promql-agent | promql-agent | 0.10.1 |
 | file://charts/substrate | substrate | 0.0.9 |
 
 ## Values
@@ -34,7 +34,7 @@ Giant Swarm packaging of the upstream kagent-dev/kagent controller (Kubernetes-n
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | ipv6 | object | false | Enable IPv6/dual-stack support. When true, configures all components for dual-stack (IPv4+IPv6) networking:   - nginx listens on both IPv4 and IPv6 (adds `listen [::]:8080`)   - Next.js binds to `::` instead of `0.0.0.0`   - Agent pods bind to `::` for dual-stack reachability Leave disabled on clusters where IPv6 is disabled at the kernel level. |
-| tag | string | `"0.10.0"` |  |
+| tag | string | `"0.10.1"` |  |
 | registry | string | `"gsoci.azurecr.io/giantswarm"` |  |
 | imagePullSecrets | list | `[]` |  |
 | imagePullPolicy | string | `"IfNotPresent"` |  |

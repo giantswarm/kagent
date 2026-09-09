@@ -9,7 +9,7 @@
 
 apiVersion: v2
 # Kept in step with the vendored kagent-crds chart by sync/patches/chart-yaml.
-appVersion: 0.10.0
+appVersion: 0.10.1
 name: kagent-crds
 description: Giant Swarm packaging of the upstream kagent.dev CRDs (Agent, AgentHarness, Memory, ModelConfig, ModelProviderConfig, RemoteMCPServer, SandboxAgent, ToolServer) and the kmcp MCPServer CRD as a Helm-managed chart.
 home: https://github.com/giantswarm/kagent
