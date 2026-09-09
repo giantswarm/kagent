@@ -5,7 +5,7 @@
 # workflow in .circleci/config.yml merges into this file at pipeline runtime.
 version: 2.1
 orbs:
-  architect: giantswarm/architect@10.4.0
+  architect: giantswarm/architect@10.4.1
 
 workflows:
   build:
@@ -50,6 +50,26 @@ workflows:
         create_kind_cluster: true
         requires:
         - build-chart
+        filters:
+          branches:
+            ignore:
+            - main
+
+    # Branch chart push (opt-in): publish the dev chart after tests + the amd64
+    # branch image, coupled with push-to-registries above.
+    - architect/push-to-app-catalog:
+        executor: app-build-suite
+        context: architect
+        name: push-chart
+        app_catalog: giantswarm-catalog
+        app_catalog_test: giantswarm-test-catalog
+        chart: kagent
+        # `appVersion` is the version of the packaged application, and this chart
+        # packages an app built elsewhere, so that app's version is what
+        # Chart.yaml declares. Keep it; the chart version is still stamped.
+        override_app_version: false
+        requires:
+        - execute-chart-tests
         filters:
           branches:
             ignore:
