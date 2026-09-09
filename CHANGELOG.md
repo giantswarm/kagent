@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Upstream kagent updated to v0.10.1. Python agents resume correctly after a
+  human-in-the-loop pause again: answering an `ask_user` question or approving a
+  tool call no longer fails with `Tool 'X' does not require confirmation.` and
+  no longer leaves the session with a dangling `tool_use` (kagent-dev/kagent#2731).
+
 ### Fixed
 
 - The bundled oauth2-proxy pulls its image from the gsoci mirror

@@ -1,23 +1,28 @@
-diff --git a/vendor/kagent/templates/_helpers.tpl b/helm/kagent/templates/_helpers.tpl
-index 51305ab..3bb36b5 100644
---- a/vendor/kagent/templates/_helpers.tpl
-+++ b/helm/kagent/templates/_helpers.tpl
-@@ -17,13 +17,16 @@ Create a default fully qualified app name.
- Common labels
- */}}
- {{- define "kagent.labels" -}}
--helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
-+{{- $chart := printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 -}}
-+helm.sh/chart: {{ regexReplaceAll "[^a-zA-Z0-9]+$" $chart "" }}
- {{ include "kagent.selectorLabels" . }}
- {{- if .Chart.Version }}
--app.kubernetes.io/version: {{ .Chart.Version | quote }}
-+{{- $version := .Chart.Version | replace "+" "_" | trunc 63 }}
-+app.kubernetes.io/version: {{ regexReplaceAll "[^a-zA-Z0-9]+$" $version "" | quote }}
- {{- end }}
- app.kubernetes.io/managed-by: {{ .Release.Service }}
- app.kubernetes.io/part-of: kagent
-+application.giantswarm.io/team: {{ index .Chart.Annotations "io.giantswarm.application.team" | quote }}
- {{- with .Values.labels }}
- {{ toYaml . | nindent 0 }}
- {{- end }}
+helm/kagent/templates/_helpers.tpl --- Text
+Renamed from vendor/kagent/templates/_helpers.tpl to helm/kagent/templates/_helpers.tpl
+17 Common labels                        17 Common labels
+18 */}}                                 18 */}}
+19 {{- define "kagent.labels" -}}       19 {{- define "kagent.labels" -}}
+20 helm.sh/chart: {{ printf "%s-%s" .Ch 20 {{- $chart := printf "%s-%s" .Chart.
+.. art.Name .Chart.Version | replace "+ .. Name .Chart.Version | replace "+" "_
+.. " "_" | trunc 63 | trimSuffix "-" }} .. " | trunc 63 -}}
+..                                      21 helm.sh/chart: {{ regexReplaceAll "[
+..                                      .. ^a-zA-Z0-9]+$" $chart "" }}
+21 {{ include "kagent.selectorLabels" . 22 {{ include "kagent.selectorLabels" .
+..  }}                                  ..  }}
+22 {{- if .Chart.Version }}             23 {{- if .Chart.Version }}
+..                                      24 {{- $version := .Chart.Version | rep
+..                                      .. lace "+" "_" | trunc 63 }}
+23 app.kubernetes.io/version: {{ .Chart 25 app.kubernetes.io/version: {{ regexR
+.. .Version | quote }}                  .. eplaceAll "[^a-zA-Z0-9]+$" $version
+..                                      .. "" | quote }}
+24 {{- end }}                           26 {{- end }}
+25 app.kubernetes.io/managed-by: {{ .Re 27 app.kubernetes.io/managed-by: {{ .Re
+.. lease.Service }}                     .. lease.Service }}
+26 app.kubernetes.io/part-of: kagent    28 app.kubernetes.io/part-of: kagent
+..                                      29 application.giantswarm.io/team: {{ i
+..                                      .. ndex .Chart.Annotations "io.giantswa
+..                                      .. rm.application.team" | quote }}
+27 {{- with .Values.labels }}           30 {{- with .Values.labels }}
+28 {{ toYaml . | nindent 0 }}           31 {{ toYaml . | nindent 0 }}
+29 {{- end }}                           32 {{- end }}
