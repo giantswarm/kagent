@@ -1,0 +1,28 @@
+# DO NOT EDIT. Generated with:
+#
+#    devctl
+#
+#    https://github.com/giantswarm/devctl/blob/071b33251f74ae6e8feedd55f483a53f58f9b5f2/pkg/gen/input/workflows/internal/file/sync_from_upstream.yaml.template
+#
+name: Sync from upstream
+
+on:
+  push:
+    branches:
+      - 'renovate/vendir/**'
+  workflow_dispatch:
+
+jobs:
+  sync-from-upstream:
+    uses: giantswarm/github-workflows/.github/workflows/sync-from-upstream.yaml@main
+    permissions:
+      contents: write
+    with:
+      update_branch: 'main#update-chart'
+      # Must match HELM_DOCS_VERSION / HELM_VALUES_SCHEMA_JSON_VERSION in
+      # pre-commit-action.yaml.template: the reusable workflow runs pre-commit
+      # and commits what the hooks rewrite, so a skew against the consumer's
+      # own pre-commit job makes every sync PR fail its schema check.
+      helm_docs_version: '1.14.2'
+      helm_values_schema_json_version: '2.6.0'
+    secrets: inherit
