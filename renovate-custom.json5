@@ -20,6 +20,11 @@
         'ghcr.io/kagent-dev/kagent/helm/kagent-crds',
       ],
       groupName: 'kagent',
+      // The sync-from-upstream workflow runs on every push to renovate/vendir/**
+      // and opens the reviewable PR from `main#update-chart` with the Giant
+      // Swarm delta re-applied. Keep Renovate's own PR behind Dependency
+      // Dashboard approval so the bump does not show up twice.
+      prCreation: 'approval',
     },
     {
       // Never propose a kagent prerelease. Upstream tags 0.10.0-rc* and

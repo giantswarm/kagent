@@ -1,0 +1,13 @@
+# Config for shield-values-sync, run by the sync-from-upstream reusable
+# workflow (giantswarm/github-workflows) on every Renovate vendir bump.
+#
+# The tool reconciles a wrapper chart's values.yaml against the values of its
+# bundled subcharts. This chart is flattened instead: helm/kagent/values.yaml
+# is generated from the vendored upstream file by sync/patches/values, and the
+# `<subchart>.enabled` condition gates, `kagent-tools.namespaceOverride` and
+# `kagent-tools.resources` are Giant Swarm additions with no upstream
+# counterpart. Without this exclusion the tool deletes them and both `make
+# verify-sync` and `helm template` fail. The drift report in the PR body is
+# unaffected.
+exclude:
+  - "**"

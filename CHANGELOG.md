@@ -26,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Renovate vendir bumps are completed automatically: the sync-from-upstream workflow re-applies the Giant Swarm delta and opens the reviewable PR from `main#update-chart`, so a bump no longer needs manual `make sync` and pre-commit commits. Renovate's own PR waits for Dependency Dashboard approval, so a bump is proposed once.
+- The reviewer diffs under `diffs/` are always plain unified patches, independent of the developer's git external diff tool.
 - Upstream kagent updated to v0.10.1. Python agents resume correctly after a
   human-in-the-loop pause again: answering an `ask_user` question or approving a
   tool call no longer fails with `Tool 'X' does not require confirmation.` and
