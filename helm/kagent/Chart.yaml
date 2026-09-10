@@ -1,11 +1,10 @@
 # See https://docs.giantswarm.io/reference/platform-api/chart-metadata/
 # for details and background.
-
 apiVersion: v2
 # Version of the packaged app (upstream kagent release). Kept in step with the
 # vendored chart by sync/patches/chart-yaml. The image tags do not read it: they
 # read `tag` in values.yaml, pinned from the same vendored version.
-appVersion: 0.10.1
+appVersion: 0.10.0
 # Make sure your name DOES NOT end in "app" or "-app".
 name: kagent
 # Please describe what the app provides in a sentence or two.
@@ -45,47 +44,47 @@ dependencies:
     repository: file://charts/kagent-tools
     condition: kagent-tools.enabled
   - name: grafana-mcp
-    version: 0.10.1
+    version: 0.10.0
     repository: file://charts/grafana-mcp
     condition: grafana-mcp.enabled, observability-agent.enabled
   - name: k8s-agent
-    version: 0.10.1
+    version: 0.10.0
     repository: file://charts/k8s-agent
     condition: k8s-agent.enabled
   - name: kgateway-agent
-    version: 0.10.1
+    version: 0.10.0
     repository: file://charts/kgateway-agent
     condition: kgateway-agent.enabled
   - name: istio-agent
-    version: 0.10.1
+    version: 0.10.0
     repository: file://charts/istio-agent
     condition: istio-agent.enabled
   - name: promql-agent
-    version: 0.10.1
+    version: 0.10.0
     repository: file://charts/promql-agent
     condition: promql-agent.enabled
   - name: observability-agent
-    version: 0.10.1
+    version: 0.10.0
     repository: file://charts/observability-agent
     condition: observability-agent.enabled
   - name: argo-rollouts-agent
-    version: 0.10.1
+    version: 0.10.0
     repository: file://charts/argo-rollouts-agent
     condition: argo-rollouts-agent.enabled
   - name: helm-agent
-    version: 0.10.1
+    version: 0.10.0
     repository: file://charts/helm-agent
     condition: helm-agent.enabled
   - name: cilium-policy-agent
-    version: 0.10.1
+    version: 0.10.0
     repository: file://charts/cilium-policy-agent
     condition: cilium-policy-agent.enabled
   - name: cilium-manager-agent
-    version: 0.10.1
+    version: 0.10.0
     repository: file://charts/cilium-manager-agent
     condition: cilium-manager-agent.enabled
   - name: cilium-debug-agent
-    version: 0.10.1
+    version: 0.10.0
     repository: file://charts/cilium-debug-agent
     condition: cilium-debug-agent.enabled
   - name: oauth2-proxy
