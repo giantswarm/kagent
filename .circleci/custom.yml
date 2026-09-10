@@ -5,7 +5,8 @@
 # This repo publishes a SECOND chart: kagent-crds, the optional Helm-managed CRD
 # lifecycle path. The generated workflow only knows about the chart named after
 # the repository, so the crds chart needs its own build and push jobs here. Both
-# charts are cut from the same tag, so they always carry the same version.
+# charts are cut from the same tag, so they always carry the same version;
+# on branches both publish the same gitsemver dev version.
 #
 # explicit_allow_chart_name_mismatch is required: the orb otherwise enforces
 # that the chart name equals the repository name (optionally with an "-app"
@@ -35,6 +36,26 @@ workflows:
         filters:
           tags:
             only: /^v.*/
+          branches:
+            ignore:
+            - main
+
+    # Branch (branchPublish): publish the crds dev chart in lockstep with the
+    # generated push-chart -- same commit, same gitsemver version, same gsoci
+    # repo + giantswarm-test-catalog. Gated on the main chart's tests too.
+    - architect/push-to-app-catalog:
+        executor: app-build-suite
+        context: architect
+        name: push-crds-chart
+        app_catalog: giantswarm-catalog
+        app_catalog_test: giantswarm-test-catalog
+        chart: kagent-crds
+        explicit_allow_chart_name_mismatch: true
+        override_app_version: false
+        requires:
+        - build-crds-chart
+        - execute-chart-tests
+        filters:
           branches:
             ignore:
             - main
