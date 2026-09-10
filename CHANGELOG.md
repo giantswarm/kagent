@@ -7,11 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-
-- Renovate vendir bumps are completed automatically. The `sync-from-upstream` workflow (enabled for this repo in giantswarm/github) runs `make update-chart` on every `renovate/vendir/**` branch, which re-applies the Giant Swarm delta, and opens the reviewable PR from `main#update-chart` with the schema, README and changelog regenerated. Renovate's own PR now waits for Dependency Dashboard approval so the bump is not proposed twice. `values-sync-ignore.yaml` excludes every key from the workflow's values-sync step, which is built for wrapper charts and would otherwise delete the `<subchart>.enabled` gates and the `kagent-tools` overrides from the flattened `values.yaml`. `helm/kagent/Chart.lock`, written by the workflow's `helm dependency update`, is ignored.
-- `sync/sync.sh` writes the reviewer diffs under `diffs/` with `git diff --no-ext-diff`, so a developer's external diff tool (e.g. difftastic) no longer replaces the unified patches with its own rendering.
-
 ### Fixed
 
 - The bundled oauth2-proxy pulls its image from the gsoci mirror
@@ -31,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Renovate vendir bumps are completed automatically: the sync-from-upstream workflow re-applies the Giant Swarm delta and opens the reviewable PR from `main#update-chart`, so a bump no longer needs manual `make sync` and pre-commit commits. Renovate's own PR waits for Dependency Dashboard approval, so a bump is proposed once.
+- The reviewer diffs under `diffs/` are always plain unified patches, independent of the developer's git external diff tool.
 - Upstream kagent updated to v0.10.1. Python agents resume correctly after a
   human-in-the-loop pause again: answering an `ask_user` question or approving a
   tool call no longer fails with `Tool 'X' does not require confirmation.` and
