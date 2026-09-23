@@ -6,62 +6,784 @@
         "annotations": {
             "type": "object",
             "description": "Additional annotations to add to all Kubernetes deployment resources",
-            "additionalProperties": true
+            "additionalProperties": false
         },
         "argo-rollouts-agent": {
             "type": "object",
-            "additionalProperties": true
-        },
-        "baseDomain": {
-            "type": "string"
-        },
-        "bootstrapMode": {
-            "type": "object",
-            "additionalProperties": true
-        },
-        "chartOperator": {
-            "type": "object",
-            "additionalProperties": true
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "memory": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "modelConfigRef": {
+                            "type": "string"
+                        },
+                        "ttlDays": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "modelConfigRef": {
+                    "type": "string"
+                },
+                "resources": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "limits": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "requests": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "cpu": {
+                                    "type": "string"
+                                },
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         },
         "cilium-debug-agent": {
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "memory": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "modelConfigRef": {
+                            "type": "string"
+                        },
+                        "ttlDays": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "modelConfigRef": {
+                    "type": "string"
+                },
+                "resources": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "limits": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "requests": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "cpu": {
+                                    "type": "string"
+                                },
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         },
         "cilium-manager-agent": {
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "memory": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "modelConfigRef": {
+                            "type": "string"
+                        },
+                        "ttlDays": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "modelConfigRef": {
+                    "type": "string"
+                },
+                "resources": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "limits": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "requests": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "cpu": {
+                                    "type": "string"
+                                },
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         },
         "cilium-policy-agent": {
             "type": "object",
-            "additionalProperties": true
-        },
-        "ciliumNetworkPolicy": {
-            "type": "object",
-            "additionalProperties": true
-        },
-        "cluster": {
-            "type": "object",
-            "additionalProperties": true
-        },
-        "clusterCA": {
-            "type": "string"
-        },
-        "clusterCIDR": {
-            "type": "string"
-        },
-        "clusterDNSIP": {
-            "type": "string"
-        },
-        "clusterID": {
-            "type": "string"
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "memory": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "modelConfigRef": {
+                            "type": "string"
+                        },
+                        "ttlDays": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "modelConfigRef": {
+                    "type": "string"
+                },
+                "resources": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "limits": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "requests": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "cpu": {
+                                    "type": "string"
+                                },
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         },
         "controller": {
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": false,
+            "properties": {
+                "a2aBaseUrl": {
+                    "type": "string",
+                    "description": "The base URL of the A2A Server endpoint, as advertised to clients."
+                },
+                "a2aClientTimeout": {
+                    "type": "string",
+                    "description": "HTTP client timeout for A2A requests from the controller to agent pods. 0 (the default) means no timeout, which is correct for SSE-based streaming agents that can run for an arbitrarily long time. The previous implicit default was 3m (inherited from the a2a-go SDK), which caused `context deadline exceeded` errors for agents that take longer than 3 minutes to complete. Set a positive Go duration string (e.g. \"30m\", \"1h\") only if you need a hard upper bound on individual A2A calls."
+                },
+                "affinity": {
+                    "type": "object",
+                    "description": "[Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity) rules for the controller pod.",
+                    "additionalProperties": false
+                },
+                "agentDeployment": {
+                    "type": "object",
+                    "description": "Global deployment defaults applied to all agent pods. Per-agent settings in the Agent CRD take precedence over these defaults.",
+                    "additionalProperties": false,
+                    "properties": {
+                        "host": {
+                            "type": "string",
+                            "description": "Default host address for agent pods to bind to. Leave empty to use the controller's default fallback of \"0.0.0.0\". Automatically set to \"::\" when ipv6.enabled is true. Can be explicitly overridden here regardless of the ipv6 flag."
+                        },
+                        "nodeSelector": {
+                            "type": "object",
+                            "description": "Default nodeSelector applied to all agent deployments. Useful when admission policies require a nodeSelector on every Deployment, since wizard-created Agents carry none. A per-agent nodeSelector in the Agent CRD takes precedence over these defaults.",
+                            "additionalProperties": false
+                        },
+                        "podLabels": {
+                            "type": "object",
+                            "description": "Default labels applied to all agent pod templates. Per-agent labels in the Agent CRD take precedence over these defaults.",
+                            "additionalProperties": false
+                        },
+                        "serviceAccountName": {
+                            "type": "string",
+                            "description": "Default ServiceAccount name for agent pods. When set, agent pods that don't specify an explicit serviceAccountName will use this ServiceAccount instead of creating a per-agent one. Useful for Workload Identity (GCP, AWS IRSA, Azure Workload Identity). Precedence: agent-level serviceAccountName > this default > auto-created SA."
+                        }
+                    }
+                },
+                "agentImage": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "pullPolicy": {
+                            "type": "string"
+                        },
+                        "pullSecret": {
+                            "type": "string",
+                            "description": "Image pull secret name set on agent pods created by the controller"
+                        },
+                        "registry": {
+                            "type": "string"
+                        },
+                        "repository": {
+                            "type": "string"
+                        },
+                        "tag": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "annotations": {
+                    "type": "object",
+                    "description": "Additional annotations to add to the controller Deployment metadata",
+                    "additionalProperties": false
+                },
+                "auth": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "mode": {
+                            "type": "string"
+                        },
+                        "userIdClaim": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "env": {
+                    "type": "array"
+                },
+                "envFrom": {
+                    "type": "array"
+                },
+                "goAgentImage": {
+                    "type": "object",
+                    "description": "The image used for the Go (ADK) runtime agent.",
+                    "additionalProperties": false,
+                    "properties": {
+                        "pullPolicy": {
+                            "type": "string"
+                        },
+                        "registry": {
+                            "type": "string"
+                        },
+                        "repository": {
+                            "type": "string"
+                        },
+                        "tag": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "image": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "pullPolicy": {
+                            "type": "string"
+                        },
+                        "registry": {
+                            "type": "string"
+                        },
+                        "repository": {
+                            "type": "string"
+                        },
+                        "tag": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "loglevel": {
+                    "type": "string"
+                },
+                "mcpEgressPlaintext": {
+                    "type": "boolean",
+                    "description": "Rewrite RemoteMCPServer tool URLs and the controller's tool-discovery dial from `https://host[:port]` to `http://host:<port-or-443>` so MCP traffic egresses in plaintext to a proxy that originates TLS upstream off by default."
+                },
+                "metrics": {
+                    "type": "object",
+                    "description": "Prometheus-style /metrics endpoint for the controller manager. When enabled, provisions a dedicated metrics Service plus the ClusterRoles required for authenticated scrapes. Bind `<fullname>-metrics-reader` to your Prometheus ServiceAccount to grant scrape access. Use `bindAddress` for any port change: the Service `targetPort` and the pod `containerPort` are derived from it at template time, so overriding `METRICS_BIND_ADDRESS` via `controller.env` shifts only the runtime listener and leaves the rendered Service pointing at the chart-time port. Setting `bindAddress: \"0\"` (or empty) is treated as a disable signal — equivalent to `enabled: false` — to keep faith with the controller",
+                    "additionalProperties": false,
+                    "properties": {
+                        "bindAddress": {
+                            "type": "string"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "secureServing": {
+                            "type": "boolean"
+                        },
+                        "service": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "type": {
+                                    "type": "string"
+                                },
+                                "port": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                },
+                "nodeSelector": {
+                    "type": "object",
+                    "description": "Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).",
+                    "additionalProperties": false
+                },
+                "pdb": {
+                    "type": "object",
+                    "description": "[PodDisruptionBudget](https://kubernetes.io/docs/tasks/run-application/configure-pdb/) for the controller pods. Disabled by default: `controller.replicas` is 1, and a `minAvailable: 1` budget on a single-replica Deployment blocks every voluntary eviction, so node drains and cluster upgrades hang indefinitely. Raise `controller.replicas` before switching to `minAvailable`.",
+                    "additionalProperties": false,
+                    "properties": {
+                        "annotations": {
+                            "type": "object",
+                            "description": "Annotations for the controller PodDisruptionBudget.",
+                            "additionalProperties": false
+                        },
+                        "enabled": {
+                            "type": "boolean",
+                            "description": "Set to true to create the PodDisruptionBudget."
+                        },
+                        "labels": {
+                            "type": "object",
+                            "description": "Additional labels for the controller PodDisruptionBudget.",
+                            "additionalProperties": false
+                        },
+                        "maxUnavailable": {
+                            "type": "integer",
+                            "description": "Maximum number of pods that may be unavailable. Int or percentage string (e.g. `1` or `\"50%\"`). Mutually exclusive with `minAvailable`."
+                        },
+                        "minAvailable": {
+                            "type": "null",
+                            "description": "Minimum number of pods that must remain available. Int or percentage string (e.g. `1` or `\"50%\"`). Mutually exclusive with `maxUnavailable`."
+                        },
+                        "unhealthyPodEvictionPolicy": {
+                            "type": "string",
+                            "description": "`spec.unhealthyPodEvictionPolicy`, one of `IfHealthyBudget` (the Kubernetes default) or `AlwaysAllow`. `AlwaysAllow` lets unhealthy pods be evicted even when the budget is exhausted, which avoids drains wedging on a crash-looping pod. Requires Kubernetes >= 1.27. Omitted from the manifest when empty."
+                        }
+                    }
+                },
+                "podAnnotations": {
+                    "type": "object",
+                    "additionalProperties": false
+                },
+                "podLabels": {
+                    "type": "object",
+                    "description": "Additional labels for the controller pod template, merged over the global `podLabels` (per-key; component keys win). Selector labels can never be overridden.",
+                    "additionalProperties": false
+                },
+                "readinessProbe": {
+                    "type": "object",
+                    "description": "Custom readiness probe for the controller container. Setting a value replaces the default probe entirely — include a handler (httpGet / exec / tcpSocket / grpc) when overriding.",
+                    "additionalProperties": false
+                },
+                "replicas": {
+                    "type": "integer"
+                },
+                "resources": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "limits": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "cpu": {
+                                    "type": "integer"
+                                },
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "requests": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "cpu": {
+                                    "type": "string"
+                                },
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "service": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "type": {
+                            "type": "string"
+                        },
+                        "annotations": {
+                            "type": "object",
+                            "additionalProperties": false
+                        },
+                        "ports": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "port": {
+                                    "type": "integer"
+                                },
+                                "targetPort": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                },
+                "serviceAccount": {
+                    "type": "object",
+                    "description": "ServiceAccount settings for the controller pod",
+                    "additionalProperties": false,
+                    "properties": {
+                        "annotations": {
+                            "type": "object",
+                            "description": "Annotations to add to the controller ServiceAccount. Useful for GCP Workload Identity, AWS IRSA, or Azure Workload Identity.",
+                            "additionalProperties": false
+                        }
+                    }
+                },
+                "skillsInitImage": {
+                    "type": "object",
+                    "description": "The image used by the skills-init container to clone skills from Git and pull OCI skill images.",
+                    "additionalProperties": false,
+                    "properties": {
+                        "pullPolicy": {
+                            "type": "string"
+                        },
+                        "registry": {
+                            "type": "string"
+                        },
+                        "repository": {
+                            "type": "string"
+                        },
+                        "tag": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "startupProbe": {
+                    "type": "object",
+                    "description": "Custom startup probe for the controller container. Setting a value replaces the default probe entirely — include a handler (httpGet / exec / tcpSocket / grpc) when overriding.",
+                    "additionalProperties": false
+                },
+                "streaming": {
+                    "type": "null",
+                    "description": "@deprecated Removed in 0.10.0. The A2A SDK now handles SSE buffering and timeouts internally. These values have no effect and will be removed in a future release."
+                },
+                "substrate": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "ateApiEndpoint": {
+                            "type": "string"
+                        },
+                        "ateApiInsecure": {
+                            "type": "boolean"
+                        },
+                        "ateApiServer": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "namespace": {
+                                    "type": "string"
+                                },
+                                "serviceAccount": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "ateApiTokenAudience": {
+                            "type": "string"
+                        },
+                        "ateApiTokenExpirationSeconds": {
+                            "type": "integer"
+                        },
+                        "ateApiTokenFile": {
+                            "type": "string"
+                        },
+                        "atenetRouterURL": {
+                            "type": "string"
+                        },
+                        "defaultWorkerPool": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "name": {
+                                    "type": "string"
+                                },
+                                "namespace": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "tolerations": {
+                    "type": "array",
+                    "description": "Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/)."
+                },
+                "toolRefreshInterval": {
+                    "type": "string",
+                    "description": "How often MCP tool-discovery controllers requeue to refresh the discovered-tool cache (RemoteMCPServer, MCPServer, labeled MCP Service). Default 60s."
+                },
+                "topologySpreadConstraints": {
+                    "type": "array",
+                    "description": "[Topology spread constraints](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#pod-topology-spread-constraints) for the controller pod."
+                },
+                "volumeMounts": {
+                    "type": "array"
+                },
+                "volumes": {
+                    "type": "array"
+                },
+                "watchNamespaces": {
+                    "type": "array",
+                    "description": "Namespaces the controller should watch. If empty, the controller will watch ALL available namespaces."
+                }
+            }
         },
         "database": {
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": false,
+            "properties": {
+                "postgres": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "bundled": {
+                            "type": "object",
+                            "description": "Bundled PostgreSQL instance — for development and evaluation only. Not suitable for production. Deployed when enabled is true and url/urlFile are not set.",
+                            "additionalProperties": false,
+                            "properties": {
+                                "enabled": {
+                                    "type": "boolean",
+                                    "description": "Set to false to disable the bundled database and provide your own via url or urlFile."
+                                },
+                                "image": {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "description": "Bundled PostgreSQL image name"
+                                        },
+                                        "pullPolicy": {
+                                            "type": "string",
+                                            "description": "Bundled PostgreSQL image pull policy"
+                                        },
+                                        "registry": {
+                                            "type": "string",
+                                            "description": "Bundled PostgreSQL image registry"
+                                        },
+                                        "repository": {
+                                            "type": "string",
+                                            "description": "Bundled PostgreSQL image repository (org/namespace)"
+                                        },
+                                        "tag": {
+                                            "type": "string",
+                                            "description": "Bundled PostgreSQL image tag"
+                                        }
+                                    }
+                                },
+                                "podSecurityContext": {
+                                    "type": "object",
+                                    "description": "Pod-level security context for the bundled PostgreSQL deployment.",
+                                    "additionalProperties": false,
+                                    "properties": {
+                                        "fsGroup": {
+                                            "type": "integer"
+                                        },
+                                        "runAsGroup": {
+                                            "type": "integer"
+                                        },
+                                        "runAsNonRoot": {
+                                            "type": "boolean"
+                                        },
+                                        "runAsUser": {
+                                            "type": "integer"
+                                        },
+                                        "seccompProfile": {
+                                            "type": "object",
+                                            "additionalProperties": false,
+                                            "properties": {
+                                                "type": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "resources": {
+                                    "type": "object",
+                                    "description": "Resource requests/limits for the demo PostgreSQL container",
+                                    "additionalProperties": false,
+                                    "properties": {
+                                        "limits": {
+                                            "type": "object",
+                                            "additionalProperties": false,
+                                            "properties": {
+                                                "cpu": {
+                                                    "type": "string"
+                                                },
+                                                "memory": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        },
+                                        "requests": {
+                                            "type": "object",
+                                            "additionalProperties": false,
+                                            "properties": {
+                                                "cpu": {
+                                                    "type": "string"
+                                                },
+                                                "memory": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "securityContext": {
+                                    "type": "object",
+                                    "description": "Container-level security context for the bundled PostgreSQL container.",
+                                    "additionalProperties": false,
+                                    "properties": {
+                                        "allowPrivilegeEscalation": {
+                                            "type": "boolean"
+                                        },
+                                        "capabilities": {
+                                            "type": "object",
+                                            "additionalProperties": false,
+                                            "properties": {
+                                                "drop": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "storage": {
+                                    "type": "string",
+                                    "description": "PersistentVolumeClaim size for demo PostgreSQL data"
+                                },
+                                "storageClassName": {
+                                    "type": "string",
+                                    "description": "StorageClass for the PostgreSQL PVC. Defaults to the cluster default when empty."
+                                }
+                            }
+                        },
+                        "pool": {
+                            "type": "object",
+                            "description": "Optional pgxpool settings. Leave unset/null to keep pgx library defaults (MaxConns≈max(4,NumCPU), MinConns=0, MaxConnIdleTime=30m, MaxConnLifetime=1h).",
+                            "additionalProperties": false,
+                            "properties": {
+                                "maxConnIdleTime": {
+                                    "type": "string"
+                                },
+                                "maxConnLifetime": {
+                                    "type": "string"
+                                },
+                                "maxConns": {
+                                    "type": "null"
+                                },
+                                "minConns": {
+                                    "type": "null"
+                                }
+                            }
+                        },
+                        "sessionRetentionDays": {
+                            "type": "integer",
+                            "description": "Hard-delete idle sessions (and cascaded events/tasks/checkpoints/shares) after N days of no activity. Uses session.updated_at as a sliding idle clock (writes refresh it). 0 disables cleanup (default, existing installs unchanged)."
+                        },
+                        "skipMigrations": {
+                            "type": "boolean",
+                            "description": "Skip running database migrations at controller startup. The controller instead verifies the database is already migrated and fails if it is not. Migrations must be applied out-of-band (e.g. from a CI/CD pipeline) before install/upgrade."
+                        },
+                        "url": {
+                            "type": "string",
+                            "description": "External PostgreSQL connection string. Is always used if set regardless of the `.bundled.enabled` field."
+                        },
+                        "urlFile": {
+                            "type": "string",
+                            "description": "Path to a file containing the database URL. Takes precedence over url when set. Is always used if set regardless of the `.bundled.enabled` field."
+                        },
+                        "vectorEnabled": {
+                            "type": "boolean",
+                            "description": "Enable the pgvector migration Required to use features that depend on database vector capability. (e.g. long-term memory) Set to true when using an external PostgreSQL that has the pgvector extension installed."
+                        }
+                    }
+                }
+            }
         },
         "extraObjects": {
             "type": "array",
@@ -70,24 +792,118 @@
         "fullnameOverride": {
             "type": "string"
         },
-        "gcpProject": {
-            "type": "string"
-        },
         "global": {
             "type": [
                 "object",
                 "null"
             ],
             "description": "Global values shared between all subcharts",
-            "$comment": "Added automatically by 'helm schema' to allow this chart to be used as a Helm dependency, as this schema would otherwise not allow Helm's special 'global' values key."
+            "$comment": "Added automatically by 'helm schema' to allow this chart to be used as a Helm dependency, as the `additionalProperties` setting would otherwise collide with Helm's special 'global' values key."
         },
         "grafana-mcp": {
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "grafana": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "serviceAccountToken": {
+                            "type": "string"
+                        },
+                        "url": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "resources": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "limits": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "cpu": {
+                                    "type": "string"
+                                },
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "requests": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "cpu": {
+                                    "type": "string"
+                                },
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         },
         "helm-agent": {
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "memory": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "modelConfigRef": {
+                            "type": "string"
+                        },
+                        "ttlDays": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "modelConfigRef": {
+                    "type": "string"
+                },
+                "resources": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "limits": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "requests": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "cpu": {
+                                    "type": "string"
+                                },
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         },
         "imagePullPolicy": {
             "type": "string"
@@ -107,66 +923,601 @@
         },
         "istio-agent": {
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "memory": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "modelConfigRef": {
+                            "type": "string"
+                        },
+                        "ttlDays": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "modelConfigRef": {
+                    "type": "string"
+                },
+                "resources": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "limits": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "requests": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "cpu": {
+                                    "type": "string"
+                                },
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         },
         "k8s-agent": {
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "memory": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "modelConfigRef": {
+                            "type": "string"
+                        },
+                        "ttlDays": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "modelConfigRef": {
+                    "type": "string"
+                },
+                "resources": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "limits": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "requests": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "cpu": {
+                                    "type": "string"
+                                },
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         },
         "kagent-tools": {
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "nameOverride": {
+                    "type": "string"
+                },
+                "nodeSelector": {
+                    "type": "object",
+                    "description": "Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).",
+                    "additionalProperties": false
+                },
+                "podSecurityContext": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "runAsNonRoot": {
+                            "type": "boolean"
+                        },
+                        "seccompProfile": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "type": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "replicaCount": {
+                    "type": "integer"
+                },
+                "resources": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "limits": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "requests": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "cpu": {
+                                    "type": "string"
+                                },
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "securityContext": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "allowPrivilegeEscalation": {
+                            "type": "boolean"
+                        },
+                        "capabilities": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "drop": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "readOnlyRootFilesystem": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "tolerations": {
+                    "type": "array",
+                    "description": "Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/)."
+                },
+                "tools": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "loglevel": {
+                            "type": "string"
+                        },
+                        "metrics": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "port": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         },
         "kgateway-agent": {
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "memory": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "modelConfigRef": {
+                            "type": "string"
+                        },
+                        "ttlDays": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "modelConfigRef": {
+                    "type": "string"
+                },
+                "resources": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "limits": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "requests": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "cpu": {
+                                    "type": "string"
+                                },
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         },
         "kmcp": {
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "fullnameOverride": {
+                    "type": "string"
+                },
+                "nameOverride": {
+                    "type": "string"
+                },
+                "namespaceOverride": {
+                    "type": "string"
+                }
+            }
         },
         "labels": {
             "type": "object",
             "description": "Additional labels to add to all Kubernetes resources",
-            "additionalProperties": true
+            "additionalProperties": false
         },
         "nameOverride": {
             "type": "string"
         },
         "namespaceOverride": {
             "type": "string",
-            "description": "Override the namespace Keep kagent core resources in a dedicated namespace separate from the release namespace. Must equal `kagent-tools.namespaceOverride` below."
+            "description": "Override the namespace"
         },
         "nodeSelector": {
             "type": "object",
             "description": "Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).",
-            "additionalProperties": true
+            "additionalProperties": false
         },
         "oauth2-proxy": {
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": false,
+            "properties": {
+                "config": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "clientID": {
+                            "type": "string"
+                        },
+                        "clientSecret": {
+                            "type": "string"
+                        },
+                        "cookieSecret": {
+                            "type": "string"
+                        },
+                        "existingSecret": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "extraArgs": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "approval-prompt": {
+                            "type": "string"
+                        },
+                        "cookie-samesite": {
+                            "type": "string"
+                        },
+                        "cookie-secure": {
+                            "type": "boolean"
+                        },
+                        "custom-templates-dir": {
+                            "type": "string"
+                        },
+                        "email-domain": {
+                            "type": "string"
+                        },
+                        "oidc-issuer-url": {
+                            "type": "string"
+                        },
+                        "pass-authorization-header": {
+                            "type": "boolean"
+                        },
+                        "provider": {
+                            "type": "string"
+                        },
+                        "redirect-url": {
+                            "type": "string"
+                        },
+                        "scope": {
+                            "type": "string"
+                        },
+                        "set-authorization-header": {
+                            "type": "boolean"
+                        },
+                        "skip-auth-regex": {
+                            "type": "string"
+                        },
+                        "skip-auth-route": {
+                            "type": "string"
+                        },
+                        "skip-jwt-bearer-tokens": {
+                            "type": "boolean"
+                        },
+                        "upstream": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "extraEnv": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                            "name": {
+                                "type": "string"
+                            },
+                            "value": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "extraVolumeMounts": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                            "mountPath": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "readOnly": {
+                                "type": "boolean"
+                            }
+                        }
+                    }
+                },
+                "extraVolumes": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                            "configMap": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "service": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "type": {
+                            "type": "string"
+                        },
+                        "portNumber": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "sessionStorage": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "type": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         },
         "observability-agent": {
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "memory": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "modelConfigRef": {
+                            "type": "string"
+                        },
+                        "ttlDays": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "modelConfigRef": {
+                    "type": "string"
+                },
+                "resources": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "limits": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "requests": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "cpu": {
+                                    "type": "string"
+                                },
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         },
         "otel": {
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": false,
+            "properties": {
+                "logging": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "exporter": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "otlp": {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "properties": {
+                                        "endpoint": {
+                                            "type": "string"
+                                        },
+                                        "insecure": {
+                                            "type": "boolean"
+                                        },
+                                        "timeout": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "tracing": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "exporter": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "otlp": {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "properties": {
+                                        "endpoint": {
+                                            "type": "string"
+                                        },
+                                        "insecure": {
+                                            "type": "boolean"
+                                        },
+                                        "protocol": {
+                                            "type": "string"
+                                        },
+                                        "timeout": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         },
         "podAnnotations": {
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": false
         },
         "podLabels": {
             "type": "object",
             "description": "Additional labels to add to all pod templates (merged into pod labels of the controller and UI Deployments; can be overridden per component). Useful for admission policies that require specific labels on pods.",
-            "additionalProperties": true
+            "additionalProperties": false
         },
         "podSecurityContext": {
             "type": "object",
             "description": "Security context for all pods",
-            "additionalProperties": true,
+            "additionalProperties": false,
             "properties": {
                 "runAsNonRoot": {
                     "type": "boolean"
@@ -184,22 +1535,210 @@
         },
         "promql-agent": {
             "type": "object",
-            "additionalProperties": true
-        },
-        "provider": {
-            "type": "string"
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "memory": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "modelConfigRef": {
+                            "type": "string"
+                        },
+                        "ttlDays": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "modelConfigRef": {
+                    "type": "string"
+                },
+                "resources": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "limits": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "requests": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "cpu": {
+                                    "type": "string"
+                                },
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         },
         "providers": {
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": false,
+            "properties": {
+                "default": {
+                    "type": "string"
+                },
+                "annotations": {
+                    "type": "object",
+                    "description": "Annotations added to the metadata of the generated default ModelConfig (the one derived from `providers.default`). Omitted from the resource when empty.",
+                    "additionalProperties": false
+                },
+                "anthropic": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "apiKeySecretKey": {
+                            "type": "string"
+                        },
+                        "apiKeySecretRef": {
+                            "type": "string"
+                        },
+                        "model": {
+                            "type": "string"
+                        },
+                        "provider": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "azureOpenAI": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "apiKeySecretKey": {
+                            "type": "string"
+                        },
+                        "apiKeySecretRef": {
+                            "type": "string"
+                        },
+                        "config": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "apiVersion": {
+                                    "type": "string"
+                                },
+                                "azureAdToken": {
+                                    "type": "string"
+                                },
+                                "azureDeployment": {
+                                    "type": "string"
+                                },
+                                "azureEndpoint": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "model": {
+                            "type": "string"
+                        },
+                        "provider": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "gemini": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "apiKeySecretKey": {
+                            "type": "string"
+                        },
+                        "apiKeySecretRef": {
+                            "type": "string"
+                        },
+                        "model": {
+                            "type": "string"
+                        },
+                        "provider": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "ollama": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "config": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "host": {
+                                    "type": "string"
+                                },
+                                "options": {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "properties": {
+                                        "num_ctx": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "model": {
+                            "type": "string"
+                        },
+                        "provider": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "openAI": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "apiKeySecretKey": {
+                            "type": "string"
+                        },
+                        "apiKeySecretRef": {
+                            "type": "string"
+                        },
+                        "model": {
+                            "type": "string"
+                        },
+                        "provider": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         },
         "proxy": {
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": false,
+            "properties": {
+                "url": {
+                    "type": "string"
+                }
+            }
         },
         "rbac": {
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": false,
+            "properties": {
+                "namespaces": {
+                    "type": "array",
+                    "description": "Namespaces in which to create Role and RoleBinding resources. If empty (default), the chart creates cluster-scoped ClusterRole and ClusterRoleBinding resources and the controller watches all namespaces. If set, the chart creates a Role + RoleBinding per listed namespace and the controller's WATCH_NAMESPACES is derived from this list (unless controller.watchNamespaces is set explicitly, which always takes precedence)."
+                }
+            }
         },
         "registry": {
             "type": "string"
@@ -207,7 +1746,7 @@
         "securityContext": {
             "type": "object",
             "description": "Security context for all containers",
-            "additionalProperties": true,
+            "additionalProperties": false,
             "properties": {
                 "allowPrivilegeEscalation": {
                     "type": "boolean"
@@ -229,17 +1768,44 @@
                 }
             }
         },
-        "subscriptionID": {
-            "type": "string"
-        },
         "substrate": {
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                }
+            }
         },
         "substrateWorkerPool": {
             "type": "object",
             "description": "Optional Agent Substrate WorkerPool installed by this chart. This is platform capacity and is not owned by individual AgentHarness resources.",
-            "additionalProperties": true
+            "additionalProperties": false,
+            "properties": {
+                "ateomImage": {
+                    "type": "string"
+                },
+                "create": {
+                    "type": "boolean"
+                },
+                "labels": {
+                    "type": "object",
+                    "additionalProperties": false
+                },
+                "name": {
+                    "type": "string"
+                },
+                "replicas": {
+                    "type": "integer"
+                },
+                "sandboxClass": {
+                    "type": "string"
+                },
+                "template": {
+                    "type": "object",
+                    "additionalProperties": false
+                }
+            }
         },
         "tag": {
             "type": "string"
@@ -250,7 +1816,300 @@
         },
         "ui": {
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": false,
+            "properties": {
+                "additionalForwardedHeaders": {
+                    "type": "array",
+                    "description": "Additional request headers (beyond Authorization) the UI proxy will forward to the backend. Names are case-insensitive. Hop-by-hop headers (Connection, Transfer-Encoding, etc.) are silently dropped."
+                },
+                "affinity": {
+                    "type": "object",
+                    "description": "[Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity) rules for the UI pod.",
+                    "additionalProperties": false
+                },
+                "annotations": {
+                    "type": "object",
+                    "description": "Additional annotations to add to the UI Deployment metadata",
+                    "additionalProperties": false
+                },
+                "auth": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "ssoRedirectPath": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "backendInternalUrl": {
+                    "type": "string"
+                },
+                "env": {
+                    "type": "object",
+                    "additionalProperties": false
+                },
+                "externalUrl": {
+                    "type": "string",
+                    "description": "Public-facing base URL of the UI (e.g. https://kagent.example.com). When set, the controller injects KAGENT_UI_URL into agent pods so that share link tools return full clickable URLs instead of relative paths."
+                },
+                "httpRoute": {
+                    "type": "object",
+                    "description": "Gateway API `HTTPRoute` for the UI. Requires the Gateway API CRDs (`gateway.networking.k8s.io/v1`) and an existing `Gateway` to attach to via `parentRefs`. Disabled by default; enable to front the UI with a Gateway API implementation (kgateway, Istio, Envoy Gateway, etc.) instead of the OpenShift Route or bundled oauth2-proxy.",
+                    "additionalProperties": false,
+                    "properties": {
+                        "annotations": {
+                            "type": "object",
+                            "description": "Annotations to add to the `HTTPRoute`.",
+                            "additionalProperties": false
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "hostnames": {
+                            "type": "array",
+                            "description": "Hostnames matched by the route."
+                        },
+                        "labels": {
+                            "type": "object",
+                            "description": "Extra labels to add to the `HTTPRoute` (merged with the chart labels).",
+                            "additionalProperties": false
+                        },
+                        "parentRefs": {
+                            "type": "array",
+                            "description": "Gateways this route attaches to. Required when `enabled` is `true`."
+                        },
+                        "rules": {
+                            "type": "array",
+                            "description": "Routing rules. When a rule omits `backendRefs`, it defaults to the UI `Service` on `ui.service.ports.port`. Each rule may also set `matches`, `filters`, and `timeouts`."
+                        }
+                    }
+                },
+                "image": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "pullPolicy": {
+                            "type": "string"
+                        },
+                        "registry": {
+                            "type": "string"
+                        },
+                        "repository": {
+                            "type": "string"
+                        },
+                        "tag": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "nginx": {
+                    "type": "object",
+                    "description": "Nginx proxy timeout configuration for the UI sidecar (values are passed directly to the corresponding nginx directives, e.g. \"1800s\").",
+                    "additionalProperties": false,
+                    "properties": {
+                        "proxyReadTimeout": {
+                            "type": "string",
+                            "description": "proxy_read_timeout: max time between two successive reads from the upstream."
+                        },
+                        "proxySendTimeout": {
+                            "type": "string",
+                            "description": "proxy_send_timeout: max time between two successive writes to the upstream."
+                        }
+                    }
+                },
+                "nodeSelector": {
+                    "type": "object",
+                    "description": "Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).",
+                    "additionalProperties": false
+                },
+                "openshiftRoute": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "annotations": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "haproxy.router.openshift.io/timeout": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "pdb": {
+                    "type": "object",
+                    "description": "[PodDisruptionBudget](https://kubernetes.io/docs/tasks/run-application/configure-pdb/) for the UI pods. Disabled by default: `ui.replicas` is 1, and a `minAvailable: 1` budget on a single-replica Deployment blocks every voluntary eviction, so node drains and cluster upgrades hang indefinitely. Raise `ui.replicas` before switching to `minAvailable`.",
+                    "additionalProperties": false,
+                    "properties": {
+                        "annotations": {
+                            "type": "object",
+                            "description": "Annotations for the UI PodDisruptionBudget.",
+                            "additionalProperties": false
+                        },
+                        "enabled": {
+                            "type": "boolean",
+                            "description": "Set to true to create the PodDisruptionBudget."
+                        },
+                        "labels": {
+                            "type": "object",
+                            "description": "Additional labels for the UI PodDisruptionBudget.",
+                            "additionalProperties": false
+                        },
+                        "maxUnavailable": {
+                            "type": "integer",
+                            "description": "Maximum number of pods that may be unavailable. Int or percentage string (e.g. `1` or `\"50%\"`). Mutually exclusive with `minAvailable`."
+                        },
+                        "minAvailable": {
+                            "type": "null",
+                            "description": "Minimum number of pods that must remain available. Int or percentage string (e.g. `1` or `\"50%\"`). Mutually exclusive with `maxUnavailable`."
+                        },
+                        "unhealthyPodEvictionPolicy": {
+                            "type": "string",
+                            "description": "`spec.unhealthyPodEvictionPolicy`, one of `IfHealthyBudget` (the Kubernetes default) or `AlwaysAllow`. `AlwaysAllow` lets unhealthy pods be evicted even when the budget is exhausted, which avoids drains wedging on a crash-looping pod. Requires Kubernetes >= 1.27. Omitted from the manifest when empty."
+                        }
+                    }
+                },
+                "podAnnotations": {
+                    "type": "object",
+                    "additionalProperties": false
+                },
+                "podLabels": {
+                    "type": "object",
+                    "description": "Additional labels for the UI pod template, merged over the global `podLabels` (per-key; component keys win). Selector labels can never be overridden.",
+                    "additionalProperties": false
+                },
+                "podSecurityContext": {
+                    "type": "object",
+                    "description": "Pod-level security context for the UI pod. Overrides the global podSecurityContext.",
+                    "additionalProperties": false
+                },
+                "publicBackendUrl": {
+                    "type": "string"
+                },
+                "readinessProbe": {
+                    "type": "object",
+                    "description": "Custom readiness probe for the UI container. Override to adjust thresholds, use exec-based probes, or change the health path.",
+                    "additionalProperties": false
+                },
+                "replicas": {
+                    "type": "integer"
+                },
+                "resources": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "limits": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "cpu": {
+                                    "type": "string"
+                                },
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "requests": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "cpu": {
+                                    "type": "string"
+                                },
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "route": {
+                    "type": "object",
+                    "description": "Gates the OpenShift `Route` for the UI. Additionally conditional on the `route.openshift.io/v1` API being present, so it is a no-op off-OpenShift. Set to `false` to front the UI with your own Route/ingress or the bundled oauth2-proxy instead of the chart's edge-terminated Route.",
+                    "additionalProperties": false,
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "securityContext": {
+                    "type": "object",
+                    "description": "Container-level security context for the UI container. Overrides the global securityContext.",
+                    "additionalProperties": false
+                },
+                "service": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "type": {
+                            "type": "string"
+                        },
+                        "annotations": {
+                            "type": "object",
+                            "additionalProperties": false
+                        },
+                        "ports": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "port": {
+                                    "type": "integer"
+                                },
+                                "targetPort": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                },
+                "serviceAccount": {
+                    "type": "object",
+                    "description": "ServiceAccount settings for the UI pod",
+                    "additionalProperties": false,
+                    "properties": {
+                        "annotations": {
+                            "type": "object",
+                            "description": "Annotations to add to the UI ServiceAccount. Useful for GCP Workload Identity, AWS IRSA, or Azure Workload Identity.",
+                            "additionalProperties": false
+                        }
+                    }
+                },
+                "startupProbe": {
+                    "type": "object",
+                    "description": "Custom startup probe for the UI container. Override to adjust thresholds, use exec-based probes, or change the health path.",
+                    "additionalProperties": false
+                },
+                "streamTimeoutSeconds": {
+                    "type": "integer",
+                    "description": "Client-side chat stream inactivity timeout (seconds). The browser aborts a streaming response if no event is received within this window. Should be >= ui.nginx.proxyReadTimeout so nginx isn't the silent limit. Default 1800 (30m)."
+                },
+                "tolerations": {
+                    "type": "array",
+                    "description": "Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/)."
+                },
+                "topologySpreadConstraints": {
+                    "type": "array",
+                    "description": "[Topology spread constraints](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#pod-topology-spread-constraints) for the UI pod."
+                },
+                "volumes": {
+                    "type": "object",
+                    "description": "EmptyDir volume sizes for Next.js UI workload (typically used when enabling readOnlyRootFilesystem)",
+                    "additionalProperties": false,
+                    "properties": {
+                        "nextjsCache": {
+                            "type": "string",
+                            "description": "Size limit for Next.js build cache (.next/cache). Default 100Mi is sufficient for typical Next.js apps with moderate caching needs."
+                        },
+                        "tmp": {
+                            "type": "string",
+                            "description": "Size limit for temporary files (/tmp). Default 50Mi provides ample space for Next.js runtime temporary data."
+                        }
+                    }
+                }
+            }
         }
     }
 }
