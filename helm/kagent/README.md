@@ -13,20 +13,20 @@ Giant Swarm packaging of the upstream kagent-dev/kagent controller (Kubernetes-n
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://charts/argo-rollouts-agent | argo-rollouts-agent | 0.10.1 |
-| file://charts/cilium-debug-agent | cilium-debug-agent | 0.10.1 |
-| file://charts/cilium-manager-agent | cilium-manager-agent | 0.10.1 |
-| file://charts/cilium-policy-agent | cilium-policy-agent | 0.10.1 |
-| file://charts/grafana-mcp | grafana-mcp | 0.10.1 |
-| file://charts/helm-agent | helm-agent | 0.10.1 |
-| file://charts/istio-agent | istio-agent | 0.10.1 |
-| file://charts/k8s-agent | k8s-agent | 0.10.1 |
+| file://charts/argo-rollouts-agent | argo-rollouts-agent | 0.10.2 |
+| file://charts/cilium-debug-agent | cilium-debug-agent | 0.10.2 |
+| file://charts/cilium-manager-agent | cilium-manager-agent | 0.10.2 |
+| file://charts/cilium-policy-agent | cilium-policy-agent | 0.10.2 |
+| file://charts/grafana-mcp | grafana-mcp | 0.10.2 |
+| file://charts/helm-agent | helm-agent | 0.10.2 |
+| file://charts/istio-agent | istio-agent | 0.10.2 |
+| file://charts/k8s-agent | k8s-agent | 0.10.2 |
 | file://charts/kagent-tools | kagent-tools | 0.2.1 |
-| file://charts/kgateway-agent | kgateway-agent | 0.10.1 |
+| file://charts/kgateway-agent | kgateway-agent | 0.10.2 |
 | file://charts/kmcp | kmcp | 0.3.0 |
 | file://charts/oauth2-proxy | oauth2-proxy | ~10.7.0 |
-| file://charts/observability-agent | observability-agent | 0.10.1 |
-| file://charts/promql-agent | promql-agent | 0.10.1 |
+| file://charts/observability-agent | observability-agent | 0.10.2 |
+| file://charts/promql-agent | promql-agent | 0.10.2 |
 | file://charts/substrate | substrate | 0.0.9 |
 
 ## Values
@@ -34,13 +34,13 @@ Giant Swarm packaging of the upstream kagent-dev/kagent controller (Kubernetes-n
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | ipv6 | object | false | Enable IPv6/dual-stack support. When true, configures all components for dual-stack (IPv4+IPv6) networking:   - nginx listens on both IPv4 and IPv6 (adds `listen [::]:8080`)   - Next.js binds to `::` instead of `0.0.0.0`   - Agent pods bind to `::` for dual-stack reachability Leave disabled on clusters where IPv6 is disabled at the kernel level. |
-| tag | string | `"0.10.1"` |  |
-| registry | string | `"gsoci.azurecr.io/giantswarm"` |  |
+| tag | string | `""` |  |
+| registry | string | `"ghcr.io"` |  |
 | imagePullSecrets | list | `[]` |  |
 | imagePullPolicy | string | `"IfNotPresent"` |  |
 | nameOverride | string | `""` |  |
-| fullnameOverride | string | `"kagent"` |  |
-| namespaceOverride | string | `.Release.Namespace` | Override the namespace Keep kagent core resources in a dedicated namespace separate from the release namespace. Must equal `kagent-tools.namespaceOverride` below. |
+| fullnameOverride | string | `""` |  |
+| namespaceOverride | string | `.Release.Namespace` | Override the namespace |
 | annotations | object | `{}` | Additional annotations to add to all Kubernetes deployment resources |
 | podAnnotations | object | `{}` |  |
 | podLabels | object | `{}` | Additional labels to add to all pod templates (merged into pod labels of the controller and UI Deployments; can be overridden per component). Useful for admission policies that require specific labels on pods. |
@@ -81,12 +81,12 @@ Giant Swarm packaging of the upstream kagent-dev/kagent controller (Kubernetes-n
 | controller.agentDeployment.host | string | "" (controller falls back to "0.0.0.0"; "::" when ipv6.enabled) | Default host address for agent pods to bind to. Leave empty to use the controller's default fallback of "0.0.0.0". Automatically set to "::" when ipv6.enabled is true. Can be explicitly overridden here regardless of the ipv6 flag. |
 | controller.a2aBaseUrl | string | `http://<fullname>-controller.<namespace>.svc:<port>` | The base URL of the A2A Server endpoint, as advertised to clients. |
 | controller.agentImage.registry | string | `""` |  |
-| controller.agentImage.repository | string | `"kagent-app"` |  |
+| controller.agentImage.repository | string | `"kagent-dev/kagent/app"` |  |
 | controller.agentImage.tag | string | `""` |  |
 | controller.agentImage.pullPolicy | string | `""` |  |
 | controller.agentImage.pullSecret | string | `""` | Image pull secret name set on agent pods created by the controller |
-| controller.skillsInitImage | object | `{"pullPolicy":"","registry":"","repository":"kagent-skills-init","tag":""}` | The image used by the skills-init container to clone skills from Git and pull OCI skill images. |
-| controller.goAgentImage | object | `{"pullPolicy":"","registry":"","repository":"golang-adk","tag":""}` | The image used for the Go (ADK) runtime agent. |
+| controller.skillsInitImage | object | `{"pullPolicy":"","registry":"","repository":"kagent-dev/kagent/skills-init","tag":""}` | The image used by the skills-init container to clone skills from Git and pull OCI skill images. |
+| controller.goAgentImage | object | `{"pullPolicy":"","registry":"","repository":"kagent-dev/kagent/golang-adk","tag":""}` | The image used for the Go (ADK) runtime agent. |
 | controller.streaming | string | `nil` | @deprecated Removed in 0.10.0. The A2A SDK now handles SSE buffering and timeouts internally. These values have no effect and will be removed in a future release. |
 | controller.a2aClientTimeout | string | "" (no timeout) | HTTP client timeout for A2A requests from the controller to agent pods. 0 (the default) means no timeout, which is correct for SSE-based streaming agents that can run for an arbitrarily long time. The previous implicit default was 3m (inherited from the a2a-go SDK), which caused `context deadline exceeded` errors for agents that take longer than 3 minutes to complete. Set a positive Go duration string (e.g. "30m", "1h") only if you need a hard upper bound on individual A2A calls. |
 | controller.watchNamespaces | list | [] (watches all available namespaces) | Namespaces the controller should watch. If empty, the controller will watch ALL available namespaces. |
@@ -107,7 +107,7 @@ Giant Swarm packaging of the upstream kagent-dev/kagent controller (Kubernetes-n
 | controller.pdb.labels | object | `{}` | Additional labels for the controller PodDisruptionBudget. |
 | controller.pdb.annotations | object | `{}` | Annotations for the controller PodDisruptionBudget. |
 | controller.image.registry | string | `""` |  |
-| controller.image.repository | string | `"kagent-controller"` |  |
+| controller.image.repository | string | `"kagent-dev/kagent/controller"` |  |
 | controller.image.tag | string | `""` |  |
 | controller.image.pullPolicy | string | `""` |  |
 | controller.resources.requests.cpu | string | `"100m"` |  |
@@ -143,7 +143,7 @@ Giant Swarm packaging of the upstream kagent-dev/kagent controller (Kubernetes-n
 | ui.externalUrl | string | "" (share tools return paths only) | Public-facing base URL of the UI (e.g. https://kagent.example.com). When set, the controller injects KAGENT_UI_URL into agent pods so that share link tools return full clickable URLs instead of relative paths. |
 | ui.replicas | int | `1` |  |
 | ui.image.registry | string | `""` |  |
-| ui.image.repository | string | `"kagent-ui"` |  |
+| ui.image.repository | string | `"kagent-dev/kagent/ui"` |  |
 | ui.image.tag | string | `""` |  |
 | ui.image.pullPolicy | string | `""` |  |
 | ui.resources.requests.cpu | string | `"100m"` |  |
@@ -224,7 +224,6 @@ Giant Swarm packaging of the upstream kagent-dev/kagent controller (Kubernetes-n
 | substrate.enabled | bool | `false` |  |
 | kagent-tools.enabled | bool | `true` |  |
 | kagent-tools.nameOverride | string | `"tools"` |  |
-| kagent-tools.namespaceOverride | string | `"kagent"` |  |
 | kagent-tools.replicaCount | int | `1` |  |
 | kagent-tools.tolerations | list | `[]` | Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
 | kagent-tools.nodeSelector | object | `{}` | Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). |
@@ -236,14 +235,6 @@ Giant Swarm packaging of the upstream kagent-dev/kagent controller (Kubernetes-n
 | kagent-tools.resources.requests.cpu | string | `"50m"` |  |
 | kagent-tools.resources.requests.memory | string | `"128Mi"` |  |
 | kagent-tools.resources.limits.memory | string | `"256Mi"` |  |
-| kagent-tools.tools.image.registry | string | `"gsoci.azurecr.io"` |  |
-| kagent-tools.tools.image.repository | string | `"giantswarm/kagent-tools"` |  |
-| kagent-tools.tools.resources.requests.cpu | string | `"100m"` |  |
-| kagent-tools.tools.resources.requests.memory | string | `"128Mi"` |  |
-| kagent-tools.tools.resources.requests.ephemeral-storage | string | `"50Mi"` |  |
-| kagent-tools.tools.resources.limits.cpu | string | `"1"` |  |
-| kagent-tools.tools.resources.limits.memory | string | `"512Mi"` |  |
-| kagent-tools.tools.resources.limits.ephemeral-storage | string | `"512Mi"` |  |
 | kagent-tools.tools.loglevel | string | `"debug"` |  |
 | kagent-tools.tools.metrics.port | int | `8085` |  |
 | proxy.url | string | `""` |  |
@@ -335,8 +326,6 @@ Giant Swarm packaging of the upstream kagent-dev/kagent controller (Kubernetes-n
 | grafana-mcp.resources.limits.cpu | string | `"500m"` |  |
 | grafana-mcp.resources.limits.memory | string | `"512Mi"` |  |
 | oauth2-proxy.enabled | bool | `false` |  |
-| oauth2-proxy.image.registry | string | `"gsoci.azurecr.io"` |  |
-| oauth2-proxy.image.repository | string | `"giantswarm/oauth2-proxy"` |  |
 | oauth2-proxy.sessionStorage.type | string | `"cookie"` |  |
 | oauth2-proxy.extraVolumes[0].name | string | `"custom-templates"` |  |
 | oauth2-proxy.extraVolumes[0].configMap.name | string | `"kagent-oauth2-proxy-templates"` |  |
