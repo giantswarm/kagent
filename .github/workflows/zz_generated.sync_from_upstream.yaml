@@ -14,11 +14,11 @@ on:
 
 jobs:
   sync-from-upstream:
-    uses: giantswarm/github-workflows/.github/workflows/sync-from-upstream.yaml@main
+    uses: giantswarm/github-workflows/.github/workflows/sync-from-upstream.yaml@fix/sync-rebuild-update-branch
     permissions:
       contents: write
     with:
-      update_branch: 'main#update-chart'
+      update_branch: 'main#update-chart-proof84'
       # Must match HELM_DOCS_VERSION in pre-commit-action.yaml.template: the
       # reusable workflow runs pre-commit and commits what the hooks rewrite, so
       # a skew against the consumer's own pre-commit job makes every sync PR fail
