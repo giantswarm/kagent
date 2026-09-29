@@ -88,6 +88,6 @@ dependencies:
     repository: file://charts/cilium-debug-agent
     condition: cilium-debug-agent.enabled
   - name: oauth2-proxy
-    version: ~10.7.0
+    version: 10.7.0
     repository: file://charts/oauth2-proxy
     condition: oauth2-proxy.enabled
