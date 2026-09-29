@@ -24,7 +24,7 @@ Giant Swarm packaging of the upstream kagent-dev/kagent controller (Kubernetes-n
 | file://charts/kagent-tools | kagent-tools | 0.2.1 |
 | file://charts/kgateway-agent | kgateway-agent | 0.10.2 |
 | file://charts/kmcp | kmcp | 0.3.0 |
-| file://charts/oauth2-proxy | oauth2-proxy | ~10.7.0 |
+| file://charts/oauth2-proxy | oauth2-proxy | 10.7.0 |
 | file://charts/observability-agent | observability-agent | 0.10.2 |
 | file://charts/promql-agent | promql-agent | 0.10.2 |
 | file://charts/substrate | substrate | 0.0.9 |
