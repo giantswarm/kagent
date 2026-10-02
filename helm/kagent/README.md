@@ -13,20 +13,20 @@ Giant Swarm packaging of the upstream kagent-dev/kagent controller (Kubernetes-n
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://charts/argo-rollouts-agent | argo-rollouts-agent | 0.10.2 |
-| file://charts/cilium-debug-agent | cilium-debug-agent | 0.10.2 |
-| file://charts/cilium-manager-agent | cilium-manager-agent | 0.10.2 |
-| file://charts/cilium-policy-agent | cilium-policy-agent | 0.10.2 |
-| file://charts/grafana-mcp | grafana-mcp | 0.10.2 |
-| file://charts/helm-agent | helm-agent | 0.10.2 |
-| file://charts/istio-agent | istio-agent | 0.10.2 |
-| file://charts/k8s-agent | k8s-agent | 0.10.2 |
-| file://charts/kagent-tools | kagent-tools | 0.2.1 |
-| file://charts/kgateway-agent | kgateway-agent | 0.10.2 |
+| file://charts/argo-rollouts-agent | argo-rollouts-agent | 0.10.3 |
+| file://charts/cilium-debug-agent | cilium-debug-agent | 0.10.3 |
+| file://charts/cilium-manager-agent | cilium-manager-agent | 0.10.3 |
+| file://charts/cilium-policy-agent | cilium-policy-agent | 0.10.3 |
+| file://charts/grafana-mcp | grafana-mcp | 0.10.3 |
+| file://charts/helm-agent | helm-agent | 0.10.3 |
+| file://charts/istio-agent | istio-agent | 0.10.3 |
+| file://charts/k8s-agent | k8s-agent | 0.10.3 |
+| file://charts/kagent-tools | kagent-tools | 0.3.0 |
+| file://charts/kgateway-agent | kgateway-agent | 0.10.3 |
 | file://charts/kmcp | kmcp | 0.3.0 |
-| file://charts/oauth2-proxy | oauth2-proxy | ~10.7.0 |
-| file://charts/observability-agent | observability-agent | 0.10.2 |
-| file://charts/promql-agent | promql-agent | 0.10.2 |
+| file://charts/oauth2-proxy | oauth2-proxy | 10.7.1 |
+| file://charts/observability-agent | observability-agent | 0.10.3 |
+| file://charts/promql-agent | promql-agent | 0.10.3 |
 | file://charts/substrate | substrate | 0.0.9 |
 
 ## Values
@@ -34,7 +34,7 @@ Giant Swarm packaging of the upstream kagent-dev/kagent controller (Kubernetes-n
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | ipv6 | object | false | Enable IPv6/dual-stack support. When true, configures all components for dual-stack (IPv4+IPv6) networking:   - nginx listens on both IPv4 and IPv6 (adds `listen [::]:8080`)   - Next.js binds to `::` instead of `0.0.0.0`   - Agent pods bind to `::` for dual-stack reachability Leave disabled on clusters where IPv6 is disabled at the kernel level. |
-| tag | string | `"0.10.2"` |  |
+| tag | string | `"0.10.3"` |  |
 | registry | string | `"gsoci.azurecr.io/giantswarm"` |  |
 | imagePullSecrets | list | `[]` |  |
 | imagePullPolicy | string | `"IfNotPresent"` |  |
@@ -83,10 +83,12 @@ Giant Swarm packaging of the upstream kagent-dev/kagent controller (Kubernetes-n
 | controller.agentImage.registry | string | `""` |  |
 | controller.agentImage.repository | string | `"kagent-app"` |  |
 | controller.agentImage.tag | string | `""` |  |
+| controller.agentImage.fullDigest | string | "" (bare tag: tag-full; tag@digest without this: reconcile error; sandbox: link-time digest) | Explicit manifest digest (sha256:...) of the full (skills/SRT) Python agent image. Forwarded as APP_FULL_IMAGE_DIGEST. When agentImage.tag is a bare tag, declarative skills agents use the tag-full image and this may be omitted. When agentImage.tag embeds a digest (tag@sha256:...), this value is required or reconciliation fails. The controller's link-time digest is not used for declarative skills agents. Sandbox agents use this when set, otherwise the link-time digest. |
 | controller.agentImage.pullPolicy | string | `""` |  |
 | controller.agentImage.pullSecret | string | `""` | Image pull secret name set on agent pods created by the controller |
 | controller.skillsInitImage | object | `{"pullPolicy":"","registry":"","repository":"kagent-skills-init","tag":""}` | The image used by the skills-init container to clone skills from Git and pull OCI skill images. |
-| controller.goAgentImage | object | `{"pullPolicy":"","registry":"","repository":"golang-adk","tag":""}` | The image used for the Go (ADK) runtime agent. |
+| controller.goAgentImage | object | `{"fullDigest":"","pullPolicy":"","registry":"","repository":"golang-adk","tag":""}` | The image used for the Go (ADK) runtime agent. |
+| controller.goAgentImage.fullDigest | string | "" (bare tag: tag-full; tag@digest without this: reconcile error; sandbox: link-time digest) | Explicit manifest digest (sha256:...) of the full (skills/SRT) Go agent image. Forwarded as GOLANG_ADK_FULL_IMAGE_DIGEST. Same rules as agentImage.fullDigest: required when goAgentImage.tag embeds a digest, optional on a bare tag. |
 | controller.streaming | string | `nil` | @deprecated Removed in 0.10.0. The A2A SDK now handles SSE buffering and timeouts internally. These values have no effect and will be removed in a future release. |
 | controller.a2aClientTimeout | string | "" (no timeout) | HTTP client timeout for A2A requests from the controller to agent pods. 0 (the default) means no timeout, which is correct for SSE-based streaming agents that can run for an arbitrarily long time. The previous implicit default was 3m (inherited from the a2a-go SDK), which caused `context deadline exceeded` errors for agents that take longer than 3 minutes to complete. Set a positive Go duration string (e.g. "30m", "1h") only if you need a hard upper bound on individual A2A calls. |
 | controller.watchNamespaces | list | [] (watches all available namespaces) | Namespaces the controller should watch. If empty, the controller will watch ALL available namespaces. |
