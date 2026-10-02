@@ -1,5 +1,5 @@
 diff --git a/vendor/kagent/values.yaml b/helm/kagent/values.yaml
-index 3fda5bf..1a31c1f 100644
+index c973d04..3829873 100644
 --- a/vendor/kagent/values.yaml
 +++ b/helm/kagent/values.yaml
 @@ -1,4 +1,16 @@
@@ -31,7 +31,7 @@ index 3fda5bf..1a31c1f 100644
 +# one of those templates coalesces this key first and .Chart.Version last, and
 +# the chart version is this repo's own, so the pin is load-bearing. Written
 +# from the vendir.yml pin; `make verify-sync` fails when the two disagree.
-+tag: "0.10.2"
++tag: "0.10.3"
 +# Pull kagent images from the Giant Swarm retagged registry. retagger mirrors
 +# them under flat names (kagent-controller, kagent-app, ...), not the upstream
 +# kagent-dev/kagent/* hierarchy, so every repository below is the flat name.
@@ -120,7 +120,7 @@ index 3fda5bf..1a31c1f 100644
    # -- ServiceAccount settings for the controller pod
    serviceAccount:
      # -- Annotations to add to the controller ServiceAccount.
-@@ -216,22 +240,22 @@ controller:
+@@ -216,8 +240,8 @@ controller:
    a2aBaseUrl: ""
    agentImage:
      registry: ""
@@ -128,9 +128,10 @@ index 3fda5bf..1a31c1f 100644
 -    tag: "" # Will default to global, then Chart version
 +    repository: kagent-app
 +    tag: ""  # Will default to global, then Chart version
-     pullPolicy: ""
-     # -- Image pull secret name set on agent pods created by the controller
-     pullSecret: ""
+     # -- Explicit manifest digest (sha256:...) of the full (skills/SRT) Python
+     # agent image. Forwarded as APP_FULL_IMAGE_DIGEST. When agentImage.tag is a
+     # bare tag, declarative skills agents use the tag-full image and this may
+@@ -233,14 +257,14 @@ controller:
    # -- The image used by the skills-init container to clone skills from Git and pull OCI skill images.
    skillsInitImage:
      registry: ""
@@ -146,10 +147,10 @@ index 3fda5bf..1a31c1f 100644
 -    tag: "" # Will default to global, then Chart version
 +    repository: golang-adk
 +    tag: ""  # Will default to global, then Chart version
-     pullPolicy: ""
-   # -- @deprecated Removed in 0.10.0. The A2A SDK now handles SSE buffering and timeouts
-   # internally. These values have no effect and will be removed in a future release.
-@@ -315,8 +339,8 @@ controller:
+     # -- Explicit manifest digest (sha256:...) of the full (skills/SRT) Go
+     # agent image. Forwarded as GOLANG_ADK_FULL_IMAGE_DIGEST. Same rules as
+     # agentImage.fullDigest: required when goAgentImage.tag embeds a digest,
+@@ -330,8 +354,8 @@ controller:
 
    image:
      registry: ""
@@ -160,7 +161,7 @@ index 3fda5bf..1a31c1f 100644
      pullPolicy: ""
    resources:
      requests:
-@@ -408,7 +432,7 @@ controller:
+@@ -423,7 +447,7 @@ controller:
 
  # -- Optional Agent Substrate WorkerPool installed by this chart. This is platform
  # capacity and is not owned by individual AgentHarness resources.
@@ -169,7 +170,7 @@ index 3fda5bf..1a31c1f 100644
    create: false
    name: kagent-default
    replicas: 1
-@@ -427,7 +451,7 @@ substrateWorkerPool:
+@@ -442,7 +466,7 @@ substrateWorkerPool:
  # UI CONFIGURATION
  # ==============================================================================
 
@@ -178,7 +179,7 @@ index 3fda5bf..1a31c1f 100644
    # -- ServiceAccount settings for the UI pod
    serviceAccount:
      # -- Annotations to add to the UI ServiceAccount.
-@@ -445,7 +469,7 @@ ui:
+@@ -460,7 +484,7 @@ ui:
    replicas: 1
    image:
      registry: ""
@@ -187,7 +188,7 @@ index 3fda5bf..1a31c1f 100644
      tag: ""
      pullPolicy: ""
    resources:
-@@ -478,7 +502,7 @@ ui:
+@@ -493,7 +517,7 @@ ui:
      proxyReadTimeout: 1800s
      # -- proxy_send_timeout: max time between two successive writes to the upstream.
      proxySendTimeout: 1800s
@@ -196,7 +197,7 @@ index 3fda5bf..1a31c1f 100644
    # -- Additional request headers (beyond Authorization) the UI proxy will forward
    # to the backend. Names are case-insensitive. Hop-by-hop headers (Connection,
    # Transfer-Encoding, etc.) are silently dropped.
-@@ -634,7 +658,7 @@ ui:
+@@ -649,7 +673,7 @@ ui:
  # ==============================================================================
  # https://kagent.dev/docs/getting-started/configuring-providers
 
@@ -205,7 +206,7 @@ index 3fda5bf..1a31c1f 100644
    default: openAI
    # -- Annotations added to the metadata of the generated default ModelConfig
    # (the one derived from `providers.default`). Omitted from the resource when empty.
-@@ -688,26 +712,37 @@ providers:
+@@ -703,26 +727,37 @@ providers:
  # KMCP
  # ==============================================================================
 
@@ -248,7 +249,7 @@ index 3fda5bf..1a31c1f 100644
    replicaCount: 1
    # -- Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).
    tolerations: []
-@@ -730,9 +765,29 @@ kagent-tools:
+@@ -745,9 +780,29 @@ kagent-tools:
      limits:
        memory: 256Mi
    tools:
@@ -279,7 +280,7 @@ index 3fda5bf..1a31c1f 100644
 
  # ==============================================================================
  # PROXY CONFIGURATION
-@@ -744,7 +799,7 @@ kagent-tools:
+@@ -759,7 +814,7 @@ kagent-tools:
  # - MCPServer resources and RemoteMCPServer resources with internal k8s URLs
  # Set this once and the controller will apply it to all agents automatically
  # Note: RemoteMCPServer resources use user-supplied URLs and do not use this proxy unless the URL is an internal k8s URL.
@@ -288,7 +289,7 @@ index 3fda5bf..1a31c1f 100644
    # Proxy URL for internally-built k8s URLs
    # Example: "http://proxy.kagent.svc.cluster.local:8080"
    url: ""
-@@ -753,7 +808,7 @@ proxy:
+@@ -768,7 +823,7 @@ proxy:
  # AGENTS
  # ==============================================================================
 
@@ -297,7 +298,7 @@ index 3fda5bf..1a31c1f 100644
    enabled: true
    modelConfigRef: ""
    memory:
-@@ -766,7 +821,7 @@ k8s-agent:
+@@ -781,7 +836,7 @@ k8s-agent:
        memory: 128Mi
      limits:
        memory: 256Mi
@@ -306,7 +307,7 @@ index 3fda5bf..1a31c1f 100644
    enabled: true
    modelConfigRef: ""
    memory:
-@@ -779,7 +834,7 @@ kgateway-agent:
+@@ -794,7 +849,7 @@ kgateway-agent:
        memory: 128Mi
      limits:
        memory: 256Mi
@@ -315,7 +316,7 @@ index 3fda5bf..1a31c1f 100644
    enabled: true
    modelConfigRef: ""
    memory:
-@@ -792,7 +847,7 @@ istio-agent:
+@@ -807,7 +862,7 @@ istio-agent:
        memory: 128Mi
      limits:
        memory: 256Mi
@@ -324,7 +325,7 @@ index 3fda5bf..1a31c1f 100644
    enabled: true
    modelConfigRef: ""
    memory:
-@@ -805,7 +860,7 @@ promql-agent:
+@@ -820,7 +875,7 @@ promql-agent:
        memory: 128Mi
      limits:
        memory: 256Mi
@@ -333,7 +334,7 @@ index 3fda5bf..1a31c1f 100644
    enabled: true
    modelConfigRef: ""
    memory:
-@@ -818,7 +873,7 @@ observability-agent:
+@@ -833,7 +888,7 @@ observability-agent:
        memory: 128Mi
      limits:
        memory: 256Mi
@@ -342,7 +343,7 @@ index 3fda5bf..1a31c1f 100644
    enabled: true
    modelConfigRef: ""
    memory:
-@@ -831,7 +886,7 @@ argo-rollouts-agent:
+@@ -846,7 +901,7 @@ argo-rollouts-agent:
        memory: 128Mi
      limits:
        memory: 256Mi
@@ -351,7 +352,7 @@ index 3fda5bf..1a31c1f 100644
    enabled: true
    modelConfigRef: ""
    memory:
-@@ -844,7 +899,7 @@ helm-agent:
+@@ -859,7 +914,7 @@ helm-agent:
        memory: 128Mi
      limits:
        memory: 256Mi
@@ -360,7 +361,7 @@ index 3fda5bf..1a31c1f 100644
    enabled: true
    modelConfigRef: ""
    memory:
-@@ -857,7 +912,7 @@ cilium-policy-agent:
+@@ -872,7 +927,7 @@ cilium-policy-agent:
        memory: 128Mi
      limits:
        memory: 256Mi
@@ -369,7 +370,7 @@ index 3fda5bf..1a31c1f 100644
    enabled: true
    modelConfigRef: ""
    memory:
-@@ -870,7 +925,7 @@ cilium-manager-agent:
+@@ -885,7 +940,7 @@ cilium-manager-agent:
        memory: 128Mi
      limits:
        memory: 256Mi
@@ -378,7 +379,7 @@ index 3fda5bf..1a31c1f 100644
    enabled: true
    modelConfigRef: ""
    memory:
-@@ -888,7 +943,7 @@ cilium-debug-agent:
+@@ -903,7 +958,7 @@ cilium-debug-agent:
  # MCP TOOLS
  # ==============================================================================
 
@@ -387,7 +388,7 @@ index 3fda5bf..1a31c1f 100644
    enabled: true
    grafana:
      url: "grafana.kagent:3000/api"
-@@ -909,8 +964,18 @@ grafana-mcp:
+@@ -924,8 +979,18 @@ grafana-mcp:
  # Enable oauth2-proxy subchart for OIDC authentication
  # Requires controller.auth.mode: trusted-proxy
 
@@ -407,7 +408,7 @@ index 3fda5bf..1a31c1f 100644
 
    # Cookie-based sessions (the redis-ha sub-chart is disabled by default;
    # enable `redis-ha.enabled` + `sessionStorage.type: redis` to switch)
-@@ -1004,21 +1069,21 @@ oauth2-proxy:
+@@ -1019,21 +1084,21 @@ oauth2-proxy:
  # OBSERVABILITY
  # ==============================================================================
 
