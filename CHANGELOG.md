@@ -39,6 +39,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated `cilium-debug-agent` to upstream version `v0.10.2`.
 - Updated `kagent` to upstream version `0.10.2`.
 - Updated `kagent-crds` to upstream version `0.10.2`.
+- Updated `kagent-tools` to upstream version `v0.3.0`.
+- Updated `grafana-mcp` to upstream version `v0.10.3`.
+- Updated `k8s-agent` to upstream version `v0.10.3`.
+- Updated `kgateway-agent` to upstream version `v0.10.3`.
+- Updated `istio-agent` to upstream version `v0.10.3`.
+- Updated `promql-agent` to upstream version `v0.10.3`.
+- Updated `observability-agent` to upstream version `v0.10.3`.
+- Updated `argo-rollouts-agent` to upstream version `v0.10.3`.
+- Updated `helm-agent` to upstream version `v0.10.3`.
+- Updated `cilium-policy-agent` to upstream version `v0.10.3`.
+- Updated `cilium-manager-agent` to upstream version `v0.10.3`.
+- Updated `cilium-debug-agent` to upstream version `v0.10.3`.
+- Updated `oauth2-proxy` to upstream version `v7.15.5`.
+- Updated `kagent` to upstream version `0.10.3`.
+- Updated `kagent-crds` to upstream version `0.10.3`.
 
 ### Fixed
 
