@@ -7,38 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
-- `kagent-crds` chart, published from this repo and cut from the same tag: the eight `kagent.dev` CRDs and the kmcp `MCPServer` CRD as templated resources with `helm.sh/resource-policy: keep`, for consumers that let Helm own the CRD lifecycle.
-- `tag` is pinned to the vendored upstream release (written by `make sync` from the `vendir.yml` pin) and checked by `make verify-sync`. Every upstream image template coalesces `.Values.tag` first and `.Chart.Version` last, and the chart version is this repo's own.
-- `helm.sh/chart` and `app.kubernetes.io/version` sanitise `+` and trailing non-alphanumerics, so they stay valid labels when helm-controller appends `+<digest>` to the chart version.
-- `application.giantswarm.io/team` on every rendered resource.
+## [0.3.9-rc.2] - 2026-10-03
 
 ### Changed
 
-- Renovate vendir bumps are completed automatically: the sync-from-upstream workflow re-applies the Giant Swarm delta and opens the reviewable PR from `main#update-chart`, so a bump no longer needs manual `make sync` and pre-commit commits. Renovate's own PR waits for Dependency Dashboard approval, so a bump is proposed once.
-- The reviewer diffs under `diffs/` are always plain unified patches, independent of the developer's git external diff tool.
-- Upstream kagent updated to v0.10.1. Python agents resume correctly after a
-  human-in-the-loop pause again: answering an `ask_user` question or approving a
-  tool call no longer fails with `Tool 'X' does not require confirmation.` and
-  no longer leaves the session with a dangling `tool_use` (kagent-dev/kagent#2731).
-- The chart is flattened: the upstream kagent chart sits at the chart root instead of under `charts/kagent`, so upstream keys move from `kagent.*` to the top level (`controller.*`, `ui.*`, `kagent-tools.*`, ...). A leftover `kagent:` key fails schema validation. The rendered output for the same effective values is unchanged apart from `helm.sh/chart` and `app.kubernetes.io/version` (this chart's version), the new `application.giantswarm.io/team` label on every resource, and the `checksum/*` pod annotations that hash them. See UPGRADE.md.
-- `Chart.yaml` reproduces upstream's bundled-subchart `dependencies` with their `condition:` gates (`kmcp.enabled`, `kagent-tools.enabled`, `oauth2-proxy.enabled`, the agents), pointing every entry at the vendored copy under `charts/`. `make verify-sync` fails when the list drifts from `charts/` or from the vendored chart.
-- The CRDs are vendored from the published upstream `kagent-crds` chart (the same tag as the controller chart) instead of the kagent and kmcp git tags; the kmcp `MCPServer` CRD comes from the `kmcp-crds` subchart bundled in it.
-- `vendir.yml` stages the pristine upstream charts into `vendor/` and flattens them onto `helm/kagent` and `helm/kagent-crds`; `sync/sync.sh` (`make sync`) re-applies the Giant Swarm delta from `sync/patches/` and writes `diffs/`; `sync/verify.sh` (`make verify-sync`, the `Verify vendored chart` GitHub workflow) is the CI gate. Replaces `hack/` and the `verify-vendored-tree` CircleCI job.
-- Updated `grafana-mcp` to upstream version `v0.10.2`.
-- Updated `k8s-agent` to upstream version `v0.10.2`.
-- Updated `kgateway-agent` to upstream version `v0.10.2`.
-- Updated `istio-agent` to upstream version `v0.10.2`.
-- Updated `promql-agent` to upstream version `v0.10.2`.
-- Updated `observability-agent` to upstream version `v0.10.2`.
-- Updated `argo-rollouts-agent` to upstream version `v0.10.2`.
-- Updated `helm-agent` to upstream version `v0.10.2`.
-- Updated `cilium-policy-agent` to upstream version `v0.10.2`.
-- Updated `cilium-manager-agent` to upstream version `v0.10.2`.
-- Updated `cilium-debug-agent` to upstream version `v0.10.2`.
-- Updated `kagent` to upstream version `0.10.2`.
-- Updated `kagent-crds` to upstream version `0.10.2`.
 - Updated `kagent-tools` to upstream version `v0.3.0`.
 - Updated `grafana-mcp` to upstream version `v0.10.3`.
 - Updated `k8s-agent` to upstream version `v0.10.3`.
@@ -54,6 +26,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated `oauth2-proxy` to upstream version `v7.15.5`.
 - Updated `kagent` to upstream version `0.10.3`.
 - Updated `kagent-crds` to upstream version `0.10.3`.
+
+## [0.3.8] - 2026-09-28
+
+### Changed
+
+- Updated `grafana-mcp` to upstream version `v0.10.2`.
+- Updated `k8s-agent` to upstream version `v0.10.2`.
+- Updated `kgateway-agent` to upstream version `v0.10.2`.
+- Updated `istio-agent` to upstream version `v0.10.2`.
+- Updated `promql-agent` to upstream version `v0.10.2`.
+- Updated `observability-agent` to upstream version `v0.10.2`.
+- Updated `argo-rollouts-agent` to upstream version `v0.10.2`.
+- Updated `helm-agent` to upstream version `v0.10.2`.
+- Updated `cilium-policy-agent` to upstream version `v0.10.2`.
+- Updated `cilium-manager-agent` to upstream version `v0.10.2`.
+- Updated `cilium-debug-agent` to upstream version `v0.10.2`.
+- Updated `kagent` to upstream version `0.10.2`.
+- Updated `kagent-crds` to upstream version `0.10.2`.
+
+## [0.3.2] - 2026-09-10
+
+### Changed
+
+- Renovate vendir bumps are completed automatically: the sync-from-upstream workflow re-applies the Giant Swarm delta and opens the reviewable PR from `main#update-chart`, so a bump no longer needs manual `make sync` and pre-commit commits. Renovate's own PR waits for Dependency Dashboard approval, so a bump is proposed once.
+- The reviewer diffs under `diffs/` are always plain unified patches, independent of the developer's git external diff tool.
+
+## [0.2.2] - 2026-09-09
+
+### Changed
+
+- Upstream kagent updated to v0.10.1. Python agents resume correctly after a
+  human-in-the-loop pause again: answering an `ask_user` question or approving a
+  tool call no longer fails with `Tool 'X' does not require confirmation.` and
+  no longer leaves the session with a dangling `tool_use` (kagent-dev/kagent#2731).
+
+## [0.2.1] - 2026-09-08
 
 ### Fixed
 
@@ -72,11 +80,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   skipped) and asserts the `kagent-oauth2-proxy` Deployment runs the mirror and
   becomes available. (#68)
 
+## [0.2.0] - 2026-09-08
+
+### Added
+
+- `kagent-crds` chart, published from this repo and cut from the same tag: the eight `kagent.dev` CRDs and the kmcp `MCPServer` CRD as templated resources with `helm.sh/resource-policy: keep`, for consumers that let Helm own the CRD lifecycle.
+- `tag` is pinned to the vendored upstream release (written by `make sync` from the `vendir.yml` pin) and checked by `make verify-sync`. Every upstream image template coalesces `.Values.tag` first and `.Chart.Version` last, and the chart version is this repo's own.
+- `helm.sh/chart` and `app.kubernetes.io/version` sanitise `+` and trailing non-alphanumerics, so they stay valid labels when helm-controller appends `+<digest>` to the chart version.
+- `application.giantswarm.io/team` on every rendered resource.
+
+### Changed
+
+- The chart is flattened: the upstream kagent chart sits at the chart root instead of under `charts/kagent`, so upstream keys move from `kagent.*` to the top level (`controller.*`, `ui.*`, `kagent-tools.*`, ...). A leftover `kagent:` key fails schema validation. The rendered output for the same effective values is unchanged apart from `helm.sh/chart` and `app.kubernetes.io/version` (this chart's version), the new `application.giantswarm.io/team` label on every resource, and the `checksum/*` pod annotations that hash them. See UPGRADE.md.
+- `Chart.yaml` reproduces upstream's bundled-subchart `dependencies` with their `condition:` gates (`kmcp.enabled`, `kagent-tools.enabled`, `oauth2-proxy.enabled`, the agents), pointing every entry at the vendored copy under `charts/`. `make verify-sync` fails when the list drifts from `charts/` or from the vendored chart.
+- The CRDs are vendored from the published upstream `kagent-crds` chart (the same tag as the controller chart) instead of the kagent and kmcp git tags; the kmcp `MCPServer` CRD comes from the `kmcp-crds` subchart bundled in it.
+- `vendir.yml` stages the pristine upstream charts into `vendor/` and flattens them onto `helm/kagent` and `helm/kagent-crds`; `sync/sync.sh` (`make sync`) re-applies the Giant Swarm delta from `sync/patches/` and writes `diffs/`; `sync/verify.sh` (`make verify-sync`, the `Verify vendored chart` GitHub workflow) is the CI gate. Replaces `hack/` and the `verify-vendored-tree` CircleCI job.
+
 ### Removed
 
 - The `kagent.*` values nesting.
 - `hack/` (`crd-keep.sh`, `verify-vendored-version.sh`, `verify-tools-namespace.sh`) and the `make verify` targets; `sync/verify.sh` carries the checks.
 - The committed `helm/kagent/charts/kagent-0.10.0.tgz`; `helm/kagent/charts/*.tgz` is ignored.
+
+## [0.1.48] - 2026-09-06
+
+### Removed
+
 - Render the bundled `kagent-tools` tool server into the `kagent` namespace
   (`kagent.kagent-tools.namespaceOverride: kagent`, equal to
   `kagent.namespaceOverride`). The upstream chart composes the
@@ -93,6 +122,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   namespace `agent-platform` and fails when the tools Service and the
   RemoteMCPServer URL disagree, and the ATS smoke enables `kagent-tools` and
   waits for the RemoteMCPServer to be `Accepted`.
+
+## [0.1.47] - 2026-09-06
+
+### Removed
+
 - The ATS smoke now creates a minimal `kagent.dev/v1alpha2` declarative Agent
   (no `runtime`, so the CRD default applies) against the chart's default
   ModelConfig with a fake provider key, asserts the Deployment the controller
@@ -101,6 +135,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the `kagent` namespace on failure. The smoke used to check only that the
   controller Deployment is ready, which is why the broken Go ADK image path of
   the 0.10.0 bump (#63) passed CI.
+
+## [0.1.46] - 2026-09-05
+
+### Removed
+
 - Map the Go ADK runtime image to the flat gsoci mirror
   (`kagent.controller.goAgentImage.repository: golang-adk`). Upstream 0.10.0 made
   `runtime: go` the default for declarative agents and reads the image from the
@@ -109,15 +148,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `gsoci.azurecr.io/giantswarm/golang-adk`. Without the mapping every new
   declarative agent pod failed with ImagePullBackOff and its Agent never reached
   Ready.
+
+## [0.1.39] - 2026-08-27
+
+### Removed
+
 - The vendored CRDs carry `helm.sh/resource-policy: keep` again, as `make sync` and
   the README document, and `make verify` fails when one does not. Metadata only:
   Helm never deletes a CRD that ships in a chart's `crds/` directory, so no
   deletion behaviour changes.
-- Repository renamed from `kagent-app` to `kagent`; chart name and OCI
-  coordinates unchanged.
-- Set `appVersion` to the upstream release the chart actually vendors (`0.9.12`).
-  It was left behind on `0.9.11` when the vendir pin was bumped, because nothing
-  tracked or verified it.
 - The upstream kagent version is now typed in exactly one place: the `vendir.yml`
   pin that Renovate edits. `make sync` propagates it into the chart metadata, and
   `make verify` -- a new CircleCI job -- fails the build when any copy
@@ -126,6 +165,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `helm template` and `helm package` all pass on that kind of drift, so a bump
   that never ran `make sync` could ship a chart claiming one upstream release and
   containing another.
+
+## [0.1.38] - 2026-08-27
+
+### Removed
+
+- Repository renamed from `kagent-app` to `kagent`; chart name and OCI
+  coordinates unchanged.
+
+## [0.1.34] - 2026-08-21
+
+### Removed
+
+- Set `appVersion` to the upstream release the chart actually vendors (`0.9.12`).
+  It was left behind on `0.9.11` when the vendir pin was bumped, because nothing
+  tracked or verified it.
 - Renovate groups the two `vendir.yml` kagent pins -- the published OCI chart and
   the git tag the CRDs are vendored from -- into a single PR, and never proposes
   an upstream prerelease (upstream tags `0.10.0-rc*` and marks the newest rc as
@@ -134,6 +188,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   coalesces its image tag to its own `.Chart.Version`, which is the clean
   vendored version, so the pin was a second copy of the version with no effect on
   the rendered output.
+
+## [0.1.10] - 2026-06-23
+
+### Removed
+
 - Source the bundled `kagent-tools` tool-server image from
   `gsoci.azurecr.io/giantswarm/kagent-tools` (mirror of
   `ghcr.io/kagent-dev/kagent/tools`) and declare `ephemeral-storage`
@@ -142,10 +201,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `agentic-platform` namespace (giantswarm/giantswarm#36885). Overrides nest
   under `kagent.kagent-tools.tools.*` — the keys the subchart actually reads;
   it does not inherit the parent `kagent.registry`.
+
+## [0.1.0] - 2026-06-21
+
+### Removed
+
 - Initial Giant Swarm packaging of the upstream `kagent-dev/kagent` controller
   chart, vendored as a subchart via vendir (pinned `0.9.9`).
 - App-owned CRDs: the eight `kagent.dev` CRDs and the `kmcp` `MCPServer` CRD ship
   in `helm/kagent/crds/` with `helm.sh/resource-policy: keep`, delivered via Flux
   `crds: CreateReplace` from the agentic-platform meta-package.
 
-[Unreleased]: https://github.com/giantswarm/kagent/tree/main
+[Unreleased]: https://github.com/giantswarm/kagent/compare/v0.3.9-rc.2...HEAD
+[0.3.9-rc.2]: https://github.com/giantswarm/kagent/compare/v0.3.8...v0.3.9-rc.2
+[0.3.8]: https://github.com/giantswarm/kagent/compare/v0.3.2...v0.3.8
+[0.3.2]: https://github.com/giantswarm/kagent/compare/v0.2.2...v0.3.2
+[0.2.2]: https://github.com/giantswarm/kagent/compare/v0.2.1...v0.2.2
+[0.2.1]: https://github.com/giantswarm/kagent/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/giantswarm/kagent/compare/v0.1.48...v0.2.0
+[0.1.48]: https://github.com/giantswarm/kagent/compare/v0.1.47...v0.1.48
+[0.1.47]: https://github.com/giantswarm/kagent/compare/v0.1.46...v0.1.47
+[0.1.46]: https://github.com/giantswarm/kagent/compare/v0.1.39...v0.1.46
+[0.1.39]: https://github.com/giantswarm/kagent/compare/v0.1.38...v0.1.39
+[0.1.38]: https://github.com/giantswarm/kagent/compare/v0.1.34...v0.1.38
+[0.1.34]: https://github.com/giantswarm/kagent/compare/v0.1.10...v0.1.34
+[0.1.10]: https://github.com/giantswarm/kagent/compare/v0.1.0...v0.1.10
+[0.1.0]: https://github.com/giantswarm/kagent/releases/tag/v0.1.0
