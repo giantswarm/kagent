@@ -9,7 +9,7 @@ metadata:
 data:
   # The body lives in the kagent.oauth2ProxySignInHTML named template
   # (_helpers.tpl) so oauth2-proxy.extraEnv in values.yaml can hash the content to
-  # force a rollout when it changes. 
+  # force a rollout when it changes.
   sign_in.html: |
     {{- include "kagent.oauth2ProxySignInHTML" . | nindent 4 }}
 {{- end }}
