@@ -63,6 +63,9 @@
             "type": "object",
             "additionalProperties": true
         },
+        "externalDNSIP": {
+            "type": "string"
+        },
         "extraObjects": {
             "type": "array",
             "description": "Additional arbitrary Kubernetes manifests to deploy alongside the chart. Each list entry is rendered through `tpl`, so values may reference the release context (e.g. `{{ include \"kagent.fullname\" . }}`, `{{ .Release.Namespace }}`). Both map and multi-line string entries are supported. Use this to manage resources such as ExternalSecret, HTTPRoute, or NetworkPolicy within the same chart lifecycle without maintaining a separate chart.  To use, replace the empty list below with your manifests, e.g.: extraObjects: - apiVersion: external-secrets.io/v1 kind: ExternalSecret metadata: name: '{{ include \"kagent.fullname\" . }}-openai' namespace: '{{ .Release.Namespace }}' spec: secretStoreRef: name: aws-secretsmanager kind: ClusterSecretStore target: name: kagent-openai data: - secretKey: OPENAI_API_KEY remoteRef: key: prod/kagent/openai property: api_key"
@@ -78,10 +81,20 @@
                 "object",
                 "null"
             ],
-            "description": "Global values shared between all subcharts",
-            "$comment": "Added automatically by 'helm schema' to allow this chart to be used as a Helm dependency, as this schema would otherwise not allow Helm's special 'global' values key."
+            "description": "Global values shared between all subcharts and the platform.",
+            "additionalProperties": true,
+            "properties": {
+                "podSecurityStandards": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            }
         },
         "grafana-mcp": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "helm": {
             "type": "object",
             "additionalProperties": true
         },
@@ -129,6 +142,9 @@
             "type": "object",
             "description": "Additional labels to add to all Kubernetes resources",
             "additionalProperties": true
+        },
+        "managementCluster": {
+            "type": "string"
         },
         "nameOverride": {
             "type": "string"
