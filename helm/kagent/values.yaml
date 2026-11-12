@@ -1,16 +1,4 @@
-# Values for the kagent chart, written by sync/patches/values/generate.py from
-# the vendored upstream values: the upstream file with the Giant Swarm defaults
-# applied (registry, flat image repositories, pinned tag, naming, the
-# kagent-tools namespace) and the `# @schema` annotations the values.schema.json
-# generator reads. Edit the generator, not this file; `make sync` rewrites it.
-#
-# Cluster-specific wiring (controller auth mode, metrics env, model providers,
-# oauth2-proxy, OTel) stays in the agent-platform meta-package.
-#
-# Every bundled subchart block is a free-form object in the schema
-# (skipProperties; Helm validates the subchart's own defaults, merged under its
-# key, against this chart's schema), and so is every upstream block whose full
-# key set is not spelled out below, so a consumer can set any upstream key.
+# Default values for kagent
 
 # ==============================================================================
 # GLOBAL CONFIGURATION
@@ -26,55 +14,75 @@
 ipv6:
   enabled: false
 
-# Global image tag for the controller, the UI and the agent runtime images the
-# controller hands out (IMAGE_TAG, SKILLS_INIT_IMAGE_TAG, GO_IMAGE_TAG). Every
-# one of those templates coalesces this key first and .Chart.Version last, and
-# the chart version is this repo's own, so the pin is load-bearing. Written
-# from the vendir.yml pin; `make verify-sync` fails when the two disagree.
-tag: "0.10.4"
-# Pull kagent images from the Giant Swarm retagged registry. retagger mirrors
-# them under flat names (kagent-controller, kagent-app, ...), not the upstream
-# kagent-dev/kagent/* hierarchy, so every repository below is the flat name.
-registry: gsoci.azurecr.io/giantswarm
+# Values under `global` are visible to this chart and to every subchart. A parent
+# chart or an operator sets one value here instead of one value per chart.
+global:
+  # -- Kubernetes DNS domain used in runtime-facing service URLs.
+  clusterDomain: cluster.local
+  # -- Registry that overrides every per-image registry when set. This is the
+  # air-gap mirror knob: one value redirects all images. Repository and tag stay
+  # per-image. For per-image control, leave this unset and set the per-image
+  # registry keys. Covers this chart's own images: controller, sandbox guest, ui,
+  # substrateWorkerPool.workerImage, and built-in Harness images
+  # (both packaged defaults and config.harnessImages overrides). The vendored subcharts
+  # kagent-tools adopts it when its pinned version bumps.
+  imageRegistry: ""
+  # -- Pull secrets for every pod. The chart merges this list (union) into each
+  # pod's own imagePullSecrets, so a local secret is never removed. Coverage
+  # matches imageRegistry above.
+  imagePullSecrets: []
+  # -- Fallback imagePullPolicy where neither a component nor the top-level
+  # imagePullPolicy sets one.
+  imagePullPolicy: ""
+  # -- Namespace scope for the whole install. A non-empty list replaces
+  # ClusterRoles with Roles and scopes the controller's watch. Both derive from
+  # this one value, so they cannot disagree. Prefer this value over the
+  # per-surface keys. rbac.namespaces overrides it when the key is present. An
+  # explicit empty rbac.namespaces restores cluster-scoped RBAC. Mixing in
+  # config.kubernetes.watchNamespaces is validated: the watch must stay inside the RBAC
+  # scope. A watched namespace without a Role is a permanent Forbidden loop at
+  # runtime.
+  watchNamespaces: []
+
+tag: ""
+registry: "ghcr.io"
 
 imagePullSecrets: []
-imagePullPolicy: IfNotPresent
+# -- Pull policy for all containers. Empty falls back to global.imagePullPolicy,
+# then IfNotPresent.
+imagePullPolicy: ""
 
 nameOverride: ""
-# Pin the release-independent name so the controller Service is always
-# `kagent-controller` regardless of the release name.
-fullnameOverride: kagent
+fullnameOverride: ""
 
 # -- Override the namespace
 # @default -- `.Release.Namespace`
-# Keep kagent core resources in a dedicated namespace separate from the release
-# namespace. Must equal `kagent-tools.namespaceOverride` below.
-namespaceOverride: kagent
+namespaceOverride: ""
 
 # -- Additional annotations to add to all Kubernetes deployment resources
-annotations: {}  # @schema additionalProperties: true
+annotations: {}
 
-podAnnotations: {}  # @schema additionalProperties: true
+podAnnotations: {}
 
 # -- Additional labels to add to all pod templates (merged into pod labels of
 # the controller and UI Deployments; can be overridden per component).
 # Useful for admission policies that require specific labels on pods.
-podLabels: {}  # @schema additionalProperties: true
+podLabels: {}
 
 # -- Additional labels to add to all Kubernetes resources
-labels: {}  # @schema additionalProperties: true
+labels: {}
   # environment: production
   # team: platform
 
 # -- Security context for all pods
-podSecurityContext:  # @schema additionalProperties: true
+podSecurityContext:
   runAsNonRoot: true
   seccompProfile:
     type: RuntimeDefault
 # fsGroup: 2000
 
 # -- Security context for all containers
-securityContext:  # @schema additionalProperties: true
+securityContext:
   allowPrivilegeEscalation: false
   readOnlyRootFilesystem: true
   capabilities:
@@ -90,220 +98,157 @@ securityContext:  # @schema additionalProperties: true
 tolerations: []
 
 # -- Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).
-nodeSelector: {}  # @schema additionalProperties: true
+nodeSelector: {}
 
 # ==============================================================================
 # DATABASE CONFIGURATION
 # ==============================================================================
 
-database:  # @schema skipProperties: true; additionalProperties: true
+database:
   postgres:
-    # -- External PostgreSQL connection string.
-    # Is always used if set regardless of the `.bundled.enabled` field.
-    url: ""
-    # -- Path to a file containing the database URL. Takes precedence over url when set.
-    # Is always used if set regardless of the `.bundled.enabled` field.
-    urlFile: ""
-    # -- Enable the pgvector migration
-    # Required to use features that depend on database vector capability. (e.g. long-term memory)
-    # Set to true when using an external PostgreSQL that has the pgvector extension installed.
-    vectorEnabled: false
-    # -- Skip running database migrations at controller startup.
-    # The controller instead verifies the database is already migrated and fails if it is not.
-    # Migrations must be applied out-of-band (e.g. from a CI/CD pipeline) before install/upgrade.
-    skipMigrations: false
-    # -- Optional pgxpool settings. Leave unset/null to keep pgx library defaults
-    # (MaxConns≈max(4,NumCPU), MinConns=0, MaxConnIdleTime=30m, MaxConnLifetime=1h).
-    pool:
-      maxConns: null
-      minConns: null
-      maxConnIdleTime: ""
-      maxConnLifetime: ""
-    # -- Hard-delete idle sessions (and cascaded events/tasks/checkpoints/shares) after N days
-    # of no activity. Uses session.updated_at as a sliding idle clock (writes refresh it).
-    # 0 disables cleanup (default, existing installs unchanged).
-    sessionRetentionDays: 0
-    # -- Bundled PostgreSQL instance — for development and evaluation only.
-    # Not suitable for production. Deployed when enabled is true and url/urlFile are not set.
-    bundled:
-      # -- Set to false to disable the bundled database and provide your own via url or urlFile.
-      enabled: true
-      image:
-        # -- Bundled PostgreSQL image registry
-        registry: docker.io
-        # -- Bundled PostgreSQL image repository (org/namespace)
-        repository: library
-        # -- Bundled PostgreSQL image name
-        name: postgres
-        # -- Bundled PostgreSQL image tag
-        tag: "18.6-alpine3.23"
-        # -- Bundled PostgreSQL image pull policy
-        pullPolicy: IfNotPresent
-      # -- PersistentVolumeClaim size for demo PostgreSQL data
-      storage: 500Mi
-      # -- StorageClass for the PostgreSQL PVC. Defaults to the cluster default when empty.
-      storageClassName: ""
-      # The database name, user, and password are hardcoded for the bundled instance (all: "kagent").
-      # This is intentional for a dev/eval setup. Switch to an external database for production.
-      # -- Resource requests/limits for the demo PostgreSQL container
-      resources:
-        requests:
-          cpu: 250m
-          memory: 256Mi
-        limits:
-          cpu: 500m
-          memory: 512Mi
-      # -- Pod-level security context for the bundled PostgreSQL deployment.
-      podSecurityContext:
-        fsGroup: 999
-        runAsUser: 999
-        runAsGroup: 999
-        runAsNonRoot: true
-        seccompProfile:
-          type: RuntimeDefault
-      # -- Container-level security context for the bundled PostgreSQL container.
-      securityContext:
-        allowPrivilegeEscalation: false
-        capabilities:
-          drop:
-            - ALL
-
+    # -- Secret holding the owner login's connection string. The owner creates the schema and runs
+    # migrations; it is not used when config.database.skipMigrations is true. Secret changes require restarting the controller.
+    ownerConnectionStringSecretRef:
+      name: kagent-postgres-owner
+      key: ownerConnectionString
+    # -- Secret holding the read/write login's connection string, used for every runtime query. Required.
+    # Secret changes require restarting the controller.
+    readWriteConnectionStringSecretRef:
+      name: kagent-postgres-readwrite
+      key: readWriteConnectionString
+    # -- Project the bundled PostgreSQL client certificates for kagent_readwrite_user and, unless
+    # config.database.skipMigrations is true, kagent_owner_user.
+    # The connection strings must reference the files under /run/postgres.podcert.ate.dev.
+    clientCertificate:
+      enabled: false
 # ==============================================================================
 # RBAC CONFIGURATION
 # ==============================================================================
 
-rbac:  # @schema skipProperties: true; additionalProperties: true
+rbac:
+  # Reconciliation and management API permissions have separate Roles and bindings.
+  # Both are always bound to the controller ServiceAccount.
   # -- Namespaces in which to create Role and RoleBinding resources.
-  # If empty (default), the chart creates cluster-scoped ClusterRole and ClusterRoleBinding
-  # resources and the controller watches all namespaces.
-  # If set, the chart creates a Role + RoleBinding per listed namespace and the controller's
-  # WATCH_NAMESPACES is derived from this list (unless controller.watchNamespaces is set
-  # explicitly, which always takes precedence).
-  namespaces: []
+  # Left unset (the default), the scope falls back to global.watchNamespaces.
+  # If that is also unset, the chart creates cluster-scoped ClusterRole and
+  # ClusterRoleBinding resources, and the controller watches all namespaces.
+  # If set, the chart creates both Roles and their bindings per listed namespace.
+  # The controller watches the same list, unless config.kubernetes.watchNamespaces
+  # overrides it.
+  # An explicit empty list forces cluster-scoped RBAC, even under a parent that
+  # sets global.watchNamespaces. This is why the key ships commented out: a
+  # declared default [] would make every install look explicitly cluster-scoped,
+  # and the global fallback would be unreachable.
+  # namespaces: []
+  {}
 
 # ==============================================================================
-# CONTROLLER CONFIGURATION
+# APPLICATION CONFIGURATION
 # ==============================================================================
 
-controller:  # @schema skipProperties: true; additionalProperties: true
+# Application settings use the ControllerConfig protobuf schema, with no
+# Kubernetes kind/version envelope. Durations use seconds (e.g. 3600s).
+# Namespace, listeners, endpoints and secret paths are supplied by the chart.
+config:
+  # Digest-pinned built-in Harness images, merged over the packaged release
+  # catalog. Keys: release, kagent, claude, codex. Empty images disable defaults.
+  # global.imageRegistry rewrites both packaged defaults and overrides set here.
+  harnessImages: {}
+  kubernetes: {}
+  server:
+    auth:
+      mode: insecure
+      # Opt in to Kubernetes TokenReview authentication independently of the mode.
+      # serviceAccount:
+      #   authority: kubernetes
+    # Serve gRPC reflection for tools such as grpcurl. Callers must pass the
+    # configured authentication. `kagent install` enables it.
+    grpcReflection: false
+  database:
+    # Role each login assumes after connecting. Set distinct roles for each install sharing a database.
+    # The owner applies migrations and is not used when skipMigrations is true.
+    owner:
+      role: kagent_owner
+    readWrite:
+      role: kagent_readwrite
+    # PostgreSQL schema for Kagent tables and the shared pgvector extension.
+    schema: kagent
+    vectorSchema: extensions
+    vectorEnabled: false
+    # Skip applying migrations at controller startup; verify they are already applied.
+    # Apply migrations out-of-band before installing or upgrading when true.
+    skipMigrations: false
+  push:
+    allowHttp: false
+    allowPrivateNetworks: false
+    # Maximum concurrent callback deliveries per controller replica.
+    maxConcurrency: 10
+    # Timeout for each callback attempt.
+    sendTimeout: 5s
+    # Recovery scans for missed wake-ups and unbound registration cleanup.
+    recoveryInterval: 60s
+  sessions:
+    idleTtl: 604800s
+    shareMaxTtl: 0s
+  sandboxes:
+    guestImage: ""
+    cpu: "1"
+    memory: 1Gi
+    defaultTtl: 3600s
+    maxTtl: 86400s
+  substrate:
+    apiEndpoint: dns:///api.ate-system.svc:443
+    routerUrl: https://atenet-router.ate-system.svc:443
+    # Must match Substrate's ateApi.actorJWTIssuer; discovery uses substrate.caFile.
+    actorJwtIssuer: https://idp.ate-system.svc
+  logging:
+    level: info
+  metrics:
+    bindAddress: ":8443"
+    secure: true
+  telemetry: {}
+  runtimeDefaults:
+    # Limits for each agent runtime; Substrate requires both.
+    cpu: "1"
+    memory: 1Gi
+    builtinTools:
+      disableFileSearch: false
+      bashVenvPath: ""
+      disableBash: false
+      # Disable built-in questions across ADK agents, including Shared subagents.
+      disableAskUser: false
+    logging:
+      level: info
+    telemetry: {}
+
+# ==============================================================================
+# CONTROLLER DEPLOYMENT
+# ==============================================================================
+
+controller:
+  # Standard OTEL overrides and external SDK credentials for this process only.
+  env: []
+  envFrom: []
+  # Mount rotating Substrate PodIdentity/ServiceDNS credentials.
+  substrateClientCertificate:
+    enabled: false
+  push:
+    signing:
+      # Optional operator-managed Secret with an unencrypted PKCS#8 Ed25519 key
+      # in private-key.pem. Empty disables push JWT signing.
+      secretName: ""
   # -- ServiceAccount settings for the controller pod
   serviceAccount:
+    # -- Create the controller ServiceAccount. Set to false to use one managed outside the chart.
+    create: true
+    # -- Name of the controller ServiceAccount.
+    # @default -- `<fullname>-controller`
+    name: ""
     # -- Annotations to add to the controller ServiceAccount.
     # Useful for GCP Workload Identity, AWS IRSA, or Azure Workload Identity.
     # @default -- {} (no extra annotations)
     annotations: {}
   replicas: 1
-  loglevel: "info"
-  # Authentication mode: "unsecure" (default) or "trusted-proxy"
-  # - unsecure: uses X-User-Id header/query param or defaults to admin@kagent.dev
-  # - trusted-proxy: trusts JWT token from Authorization header (set by oauth2-proxy)
-  auth:
-    mode: unsecure
-    # JWT claim for user identity (default: "sub")
-    # Override only if your OIDC provider uses a different claim
-    userIdClaim: ""
-  # -- Global deployment defaults applied to all agent pods.
-  # Per-agent settings in the Agent CRD take precedence over these defaults.
-  agentDeployment:
-    # -- Default ServiceAccount name for agent pods.
-    # When set, agent pods that don't specify an explicit serviceAccountName
-    # will use this ServiceAccount instead of creating a per-agent one.
-    # Useful for Workload Identity (GCP, AWS IRSA, Azure Workload Identity).
-    # Precedence: agent-level serviceAccountName > this default > auto-created SA.
-    # @default -- "" (auto-create per-agent ServiceAccount)
-    serviceAccountName: ""
-    # -- Default labels applied to all agent pod templates.
-    # Per-agent labels in the Agent CRD take precedence over these defaults.
-    # @default -- {} (no extra labels)
-    podLabels: {}
-    # Example:
-    #   podLabels:
-    #     team: platform
-    #     environment: production
-    # -- Default nodeSelector applied to all agent deployments.
-    # Useful when admission policies require a nodeSelector on every
-    # Deployment, since wizard-created Agents carry none. A per-agent
-    # nodeSelector in the Agent CRD takes precedence over these defaults.
-    # @default -- {} (no default nodeSelector)
-    nodeSelector: {}
-    # Example:
-    #   nodeSelector:
-    #     kubernetes.io/os: linux
-    # -- Default host address for agent pods to bind to.
-    # Leave empty to use the controller's default fallback of "0.0.0.0".
-    # Automatically set to "::" when ipv6.enabled is true.
-    # Can be explicitly overridden here regardless of the ipv6 flag.
-    # @default -- "" (controller falls back to "0.0.0.0"; "::" when ipv6.enabled)
-    host: ""
-  # -- The base URL of the A2A Server endpoint, as advertised to clients.
-  # @default -- `http://<fullname>-controller.<namespace>.svc:<port>`
-  a2aBaseUrl: ""
-  agentImage:
-    registry: ""
-    repository: kagent-app
-    tag: ""  # Will default to global, then Chart version
-    # -- Explicit manifest digest (sha256:...) of the full (skills/SRT) Python
-    # agent image. Forwarded as APP_FULL_IMAGE_DIGEST. When agentImage.tag is a
-    # bare tag, declarative skills agents use the tag-full image and this may
-    # be omitted. When agentImage.tag embeds a digest (tag@sha256:...), this
-    # value is required or reconciliation fails. The controller's link-time
-    # digest is not used for declarative skills agents. Sandbox agents use this
-    # when set, otherwise the link-time digest.
-    # @default -- "" (bare tag: tag-full; tag@digest without this: reconcile error; sandbox: link-time digest)
-    fullDigest: ""
-    pullPolicy: ""
-    # -- Image pull secret name set on agent pods created by the controller
-    pullSecret: ""
-  # -- The image used by the skills-init container to clone skills from Git and pull OCI skill images.
-  skillsInitImage:
-    registry: ""
-    repository: kagent-skills-init
-    tag: ""  # Will default to global, then Chart version
-    pullPolicy: ""
-  # -- The image used for the Go (ADK) runtime agent.
-  goAgentImage:
-    registry: ""
-    repository: golang-adk
-    tag: ""  # Will default to global, then Chart version
-    # -- Explicit manifest digest (sha256:...) of the full (skills/SRT) Go
-    # agent image. Forwarded as GOLANG_ADK_FULL_IMAGE_DIGEST. Same rules as
-    # agentImage.fullDigest: required when goAgentImage.tag embeds a digest,
-    # optional on a bare tag.
-    # @default -- "" (bare tag: tag-full; tag@digest without this: reconcile error; sandbox: link-time digest)
-    fullDigest: ""
-    pullPolicy: ""
-  # -- @deprecated Removed in 0.10.0. The A2A SDK now handles SSE buffering and timeouts
-  # internally. These values have no effect and will be removed in a future release.
-  streaming: null
-
-  # -- HTTP client timeout for A2A requests from the controller to agent pods.
-  # 0 (the default) means no timeout, which is correct for SSE-based streaming agents
-  # that can run for an arbitrarily long time. The previous implicit default was 3m
-  # (inherited from the a2a-go SDK), which caused `context deadline exceeded` errors
-  # for agents that take longer than 3 minutes to complete.
-  # Set a positive Go duration string (e.g. "30m", "1h") only if you need a hard
-  # upper bound on individual A2A calls.
-  # @default -- "" (no timeout)
-  a2aClientTimeout: ""
-
-  # -- Namespaces the controller should watch.
-  # If empty, the controller will watch ALL available namespaces.
-  # @default -- [] (watches all available namespaces)
-  watchNamespaces: []
-  #  - watch-ns-1
-  #  - watch-ns-2
-
-  # -- Rewrite RemoteMCPServer tool URLs and the controller's tool-discovery
-  # dial from `https://host[:port]` to `http://host:<port-or-443>` so MCP
-  # traffic egresses in plaintext to a proxy that originates TLS upstream
-  # off by default.
-  mcpEgressPlaintext: false
-
-  # -- How often MCP tool-discovery controllers requeue to refresh the
-  # discovered-tool cache (RemoteMCPServer, MCPServer, labeled MCP Service).
-  # Default 60s.
-  toolRefreshInterval: "60s"
-
   # -- Additional annotations to add to the controller Deployment metadata
   annotations: {}
 
@@ -354,8 +299,8 @@ controller:  # @schema skipProperties: true; additionalProperties: true
 
   image:
     registry: ""
-    repository: kagent-controller
-    tag: ""  # Will default to global, then Chart version
+    repository: kagent-dev/kagent/controller
+    tag: "" # Will default to global, then Chart version
     pullPolicy: ""
   resources:
     requests:
@@ -370,56 +315,66 @@ controller:  # @schema skipProperties: true; additionalProperties: true
       port: 8083
       targetPort: 8083
     annotations: {}
-  # -- Prometheus-style /metrics endpoint for the controller manager.
-  # When enabled, provisions a dedicated metrics Service plus the
-  # ClusterRoles required for authenticated scrapes. Bind
-  # `<fullname>-metrics-reader` to your Prometheus ServiceAccount to grant
-  # scrape access. Use `bindAddress` for any port change: the Service
-  # `targetPort` and the pod `containerPort` are derived from it at
-  # template time, so overriding `METRICS_BIND_ADDRESS` via
-  # `controller.env` shifts only the runtime listener and leaves the
-  # rendered Service pointing at the chart-time port. Setting
-  # `bindAddress: "0"` (or empty) is treated as a disable signal —
-  # equivalent to `enabled: false` — to keep faith with the controller
-  # binary's documented contract for `--metrics-bind-address`.
-  # @default -- disabled
+  # Kubernetes packaging for the controller's Prometheus listener. Its address
+  # and TLS mode come from config.metrics.
   metrics:
     enabled: false
-    bindAddress: ":8443"
-    secureServing: true
     service:
       type: ClusterIP
       port: 8443
-
-  # Extra controller env (mapped to flags via SUBSTRATE_* env names).
-  env: []
-
-  # Agent Substrate (OpenClaw harness runtime=substrate). Requires ate-system installed.
-  # kagent generates per-harness ActorTemplates and references an existing WorkerPool.
-  substrate:
-    enabled: false
-    ateApiEndpoint: ""
-    atenetRouterURL: ""
-    ateApiInsecure: false
-    ateApiTokenFile: /var/run/secrets/tokens/ate-api/token
-    ateApiTokenAudience: api.ate-system.svc
-    ateApiTokenExpirationSeconds: 3600
-    # Substrate ate-api-server identity for env source resolution (secretKeyRef/configMapKeyRef on ActorTemplates).
-    ateApiServer:
-      namespace: ate-system
-      serviceAccount: ate-api-server
-    defaultWorkerPool:
+    # -- Prometheus Operator `ServiceMonitor` for the metrics `Service`.
+    # Requires `controller.metrics.enabled` and the
+    # `monitoring.coreos.com/v1` CRDs; the chart only renders it when the
+    # target cluster serves that API, so enabling it on a cluster without
+    # the Prometheus Operator is a no-op rather than a failed install
+    # (`helm template` needs `--api-versions monitoring.coreos.com/v1`).
+    # The endpoint follows
+    # `secureServing`: port name, scheme, bearer token and TLS settings are
+    # all derived from it, so flipping `secureServing` alone keeps the
+    # scrape working. With `secureServing` enabled the scrape is also
+    # authorized only once `<fullname>-metrics-reader` is bound to the
+    # Prometheus ServiceAccount; set `prometheusServiceAccount` below and
+    # the chart renders that binding for you.
+    # @default -- disabled
+    serviceMonitor:
+      enabled: false
+      # -- ServiceAccount Prometheus scrapes with. When `name` is set and
+      # `secureServing` is enabled, the chart binds
+      # `<fullname>-metrics-reader` to it with a `ClusterRoleBinding` so
+      # the scrape does not fail with 403. Leave `name` empty to manage
+      # the binding yourself.
+      prometheusServiceAccount:
+        name: ""
+        # -- Namespace of the Prometheus ServiceAccount.
+        # @default -- `serviceMonitor.namespace`, then the release namespace
+        namespace: ""
+      # -- Namespace to create the `ServiceMonitor` in. The scrape target
+      # stays the release namespace either way.
+      # @default -- the release namespace
       namespace: ""
-      name: ""
-    # pauseImage: "gcr.io/gke-release/pause@sha256:bcbd57ba5653580ec647b16d8163cdd1112df3609129b01f912a8032e48265da"
-    # Example when enabled:
-    #   enabled: true
-    #   ateApiEndpoint: "dns:///api.ate-system.svc:443"
-    #   atenetRouterURL: "http://atenet-router.ate-system.svc:80"
-    #   defaultWorkerPool:
-    #     name: "kagent-default"
-  envFrom: []
-
+      # -- Extra labels for the `ServiceMonitor` (merged with the chart
+      # labels). Set whatever label your Prometheus
+      # `serviceMonitorSelector` matches on.
+      labels: {}
+      # -- Annotations for the `ServiceMonitor`.
+      annotations: {}
+      # -- Scrape interval. Prometheus' global default when empty.
+      interval: ""
+      # -- Scrape timeout. Prometheus' global default when empty.
+      scrapeTimeout: ""
+      # -- Keep the scraped labels when they collide with server-side ones.
+      honorLabels: false
+      # -- `relabelings` applied to the scrape targets.
+      relabelings: []
+      # -- `metricRelabelings` applied to the scraped samples.
+      metricRelabelings: []
+      # -- Token presented to the authenticated metrics endpoint. Only used
+      # when `secureServing` is enabled; set to `""` to omit it.
+      bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+      # -- `tlsConfig` for the scrape. Only used when `secureServing` is
+      # enabled, where the controller serves a self-signed certificate.
+      # @default -- insecureSkipVerify: true
+      tlsConfig: {}
   # Additional volumes on the output Deployment definition.
   volumes: []
   # - name: foo
@@ -446,27 +401,66 @@ controller:  # @schema skipProperties: true; additionalProperties: true
   readinessProbe: {}
 
 # -- Optional Agent Substrate WorkerPool installed by this chart. This is platform
-# capacity and is not owned by individual AgentHarness resources.
-substrateWorkerPool:  # @schema skipProperties: true; additionalProperties: true
+# capacity and is not owned by individual agents.
+substrateWorkerPool:
   create: false
   name: kagent-default
   replicas: 1
-  ateomImage: ""
-  # sandboxClass selects the sandbox runtime family (gvisor|microvm). kagent-generated
-  # ActorTemplates currently hardcode gvisor; set this to gvisor until microvm is supported.
+  workerImage: ""
+  # sandboxClass selects the sandbox runtime family (gvisor|microvm) for workers
+  # and kagent-generated ActorTemplates whose Harness references this pool.
+  # Use a matching workerImage (ateworker-gvisor or ateworker-microvm). Substrate must have
+  # the corresponding SandboxConfig installed (gvisor-default or microvm);
+  # microvm also requires runtime assets and KVM-capable nodes with atelet's device plugin.
   sandboxClass: gvisor
-  # Extra labels merged onto the WorkerPool metadata (in addition to the
-  # kagent.dev/worker-pool label used by generated ActorTemplates to select this pool).
+  # Optional override for the SandboxConfig referenced by the selected class.
+  # Defaults to "microvm" for sandboxClass=microvm and "gvisor-default" otherwise.
+  sandboxConfigRef: ""
+  # Extra labels merged onto the WorkerPool metadata. The placement labels
+  # kagent.dev/worker-pool-name and kagent.dev/worker-pool-namespace always use this
+  # pool's name and namespace, so ActorTemplates generated for other namespaces
+  # do not select its workers.
   labels: {}
+  # -- ServiceAccount settings for the worker pods
+  serviceAccount:
+    # -- Create the worker ServiceAccount. Set to false to use one managed outside the chart.
+    create: true
+    # -- Name of the worker ServiceAccount.
+    # @default -- `<substrateWorkerPool.name>`
+    name: ""
   # Optional pod scheduling/resources for worker pods (WorkerPool.spec.template).
   # nodeSelector / tolerations / priorityClassName / nodeAffinity / resources.
   template: {}
+
+# -- Ready-to-use Harnesses in the release namespace, so Agents there can set
+# spec.harnessRef without first writing a Harness. Each runs on
+# substrateWorkerPool.name and uses the release's built-in runtime image
+# (config.harnessImages), so the chart does not pin an image here. `kagent install`
+# enables them together with the WorkerPool. Agents in other namespaces need
+# their own Harness, because Agent.spec.harnessRef is namespace-local.
+harnesses:
+  # -- Render the default Harnesses. Requires a WorkerPool named
+  # substrateWorkerPool.name in the release namespace (substrateWorkerPool.create
+  # or one managed outside the chart).
+  enabled: false
+  # -- Substrate snapshot location shared by the default Harnesses. The default
+  # matches the ate-snapshots bucket of Substrate's bundled RustFS.
+  snapshotLocation: s3://ate-snapshots/kagent/
+  # -- Render `kagent-default`, a Harness for the kagent runtime.
+  kagent:
+    enabled: true
+  # -- Render `codex-default`, a Harness for the Codex runtime.
+  codex:
+    enabled: true
+  # -- Render `claude-default`, a Harness for the Claude runtime.
+  claude:
+    enabled: true
 
 # ==============================================================================
 # UI CONFIGURATION
 # ==============================================================================
 
-ui:  # @schema skipProperties: true; additionalProperties: true
+ui:
   # -- ServiceAccount settings for the UI pod
   serviceAccount:
     # -- Annotations to add to the UI ServiceAccount.
@@ -484,7 +478,7 @@ ui:  # @schema skipProperties: true; additionalProperties: true
   replicas: 1
   image:
     registry: ""
-    repository: kagent-ui
+    repository: kagent-dev/kagent/ui
     tag: ""
     pullPolicy: ""
   resources:
@@ -510,26 +504,46 @@ ui:  # @schema skipProperties: true; additionalProperties: true
   # streaming response if no event is received within this window. Should be >=
   # ui.nginx.proxyReadTimeout so nginx isn't the silent limit. Default 1800 (30m).
   streamTimeoutSeconds: 1800
-  # -- Nginx proxy timeout configuration for the UI sidecar (values are passed
-  # directly to the corresponding nginx directives, e.g. "1800s").
+  # -- Nginx configuration for the UI sidecar (timeout values are passed directly
+  # to the corresponding nginx directives, e.g. "1800s").
   nginx:
     # -- proxy_read_timeout: max time between two successive reads from the upstream.
     proxyReadTimeout: 1800s
     # -- proxy_send_timeout: max time between two successive writes to the upstream.
     proxySendTimeout: 1800s
-  env: {}  # Additional configuration key-value pairs for the ui ConfigMap
-  # -- Additional request headers (beyond Authorization) the UI proxy will forward
-  # to the backend. Names are case-insensitive. Hop-by-hop headers (Connection,
-  # Transfer-Encoding, etc.) are silently dropped.
+    # -- client_max_body_size: max request body size (0 disables it). Just above the
+    # gateway's 16 MiB gRPC cap, which chat attachments hit first.
+    clientMaxBodySize: 20m
+  # -- Extra environment variables for the UI container, applied after ConfigMap
+  # defaults. Entries stay in the Deployment to support valueFrom and $(VAR_NAME)
+  # expansion. An installed app extension's settings go here, named
+  # `KAGENT_UI_EXTENSION_*`; the container's entrypoint copies
+  # those onto `window.environmentVariables` for the browser to read.
+  env: []
+  # -- Identity headers the UI's nginx proxy will forward to the backend on
+  # /api/, /a2a/, and /mcp. Names are case-insensitive. Authorization is always
+  # forwarded; the auth-proxy identity headers (x-auth-request-*, x-forwarded-user,
+  # x-forwarded-email, x-forwarded-groups, x-forwarded-preferred-username) are
+  # stripped from client requests unless listed here, so a caller cannot spoof
+  # an identity the backend trusts. Headers outside that set are forwarded by
+  # nginx as normal. In trusted-proxy mode, X-Agent-Name and X-User-Id are
+  # always stripped, even if listed here.
   additionalForwardedHeaders: []
   # Example:
   #   additionalForwardedHeaders:
   #     - X-Forwarded-User
   #     - X-Forwarded-Email
-  # Browser uses this path on the UI hostname (nginx proxies /api → controller). Required for client-side /api and WebSockets from outside the cluster.
+  # -- Base URL the browser calls the controller API on. Reaches the browser at
+  # runtime as the `apiBaseUrl` key of /config.json, which the app fetches on
+  # startup — it is deliberately not baked into the bundle, so changing it here
+  # takes effect on pod restart rather than requiring an image rebuild.
+  # The default is a path on the UI's own hostname, which nginx proxies to the
+  # controller; set an absolute URL only if the browser must reach the API
+  # somewhere other than the UI origin.
   publicBackendUrl: "/api"
-  # Next.js server default when set (BACKEND_INTERNAL_URL). Override if the controller API base differs.
-  backendInternalUrl: ""
+  # -- Prefix a reverse proxy strips before forwarding, e.g. `/ui`; root-relative URLs such as `publicBackendUrl` get it too.
+  # With oauth2-proxy, set `OIDC_REDIRECT_URL` under it and restart oauth2-proxy after changing it.
+  basePath: ""
   # -- Pod-level security context for the UI pod. Overrides the global podSecurityContext.
   # @default -- (uses global podSecurityContext)
   podSecurityContext: {}
@@ -538,11 +552,10 @@ ui:  # @schema skipProperties: true; additionalProperties: true
   # @default -- (uses global securityContext)
   securityContext: {}
   #   readOnlyRootFilesystem: true
-  # -- EmptyDir volume sizes for Next.js UI workload (typically used when enabling readOnlyRootFilesystem)
+  # -- EmptyDir volume sizes for the UI workload (typically used when enabling readOnlyRootFilesystem)
   volumes:
-    # -- Size limit for Next.js build cache (.next/cache). Default 100Mi is sufficient for typical Next.js apps with moderate caching needs.
-    nextjsCache: 100Mi
-    # -- Size limit for temporary files (/tmp). Default 50Mi provides ample space for Next.js runtime temporary data.
+    # -- Size limit for temporary files (/tmp). Holds the nginx temp directories
+    # and the generated config.json. Default 50Mi is ample for both.
     tmp: 50Mi
   # capabilities:
   #   drop:
@@ -596,7 +609,7 @@ ui:  # @schema skipProperties: true; additionalProperties: true
     annotations: {}
 
   # -- Custom startup probe for the UI container.
-  # Override to adjust thresholds, use exec-based probes, or change the health path.
+  # Override to adjust thresholds or change the health path. The image has no shell or curl, so use httpGet or tcpSocket.
   # @default -- httpGet /health on port http, periodSeconds=1, initialDelaySeconds=1
   startupProbe: {}
   # Example:
@@ -608,7 +621,7 @@ ui:  # @schema skipProperties: true; additionalProperties: true
   #     periodSeconds: 5
   #     failureThreshold: 20
   # -- Custom readiness probe for the UI container.
-  # Override to adjust thresholds, use exec-based probes, or change the health path.
+  # Override to adjust thresholds or change the health path. The image has no shell or curl, so use httpGet or tcpSocket.
   # @default -- httpGet /health on port http, periodSeconds=30
   readinessProbe: {}
   # Example:
@@ -673,7 +686,7 @@ ui:  # @schema skipProperties: true; additionalProperties: true
 # ==============================================================================
 # https://kagent.dev/docs/getting-started/configuring-providers
 
-providers:  # @schema skipProperties: true; additionalProperties: true
+providers:
   default: openAI
   # -- Annotations added to the metadata of the generated default ModelConfig
   # (the one derived from `providers.default`). Omitted from the resource when empty.
@@ -688,12 +701,19 @@ providers:  # @schema skipProperties: true; additionalProperties: true
     # This same block can be used under any provider.
     # tls:
     #   disableVerify: false
-    #   caCertSecretRef: ""
-    #   caCertSecretKey: ""
-    #   disableSystemCAs: false
   ollama:
     provider: Ollama
+    # A local model, pulled with `ollama pull`. Ollama Cloud models are listed in
+    # the UI (see the controller's static catalog) and reached with a ":cloud" tag
+    # or bare cloud tag such as "deepseek-v4.1-flash".
     model: "llama3.2"
+    # apiKeySecretRef/apiKeySecretKey point at the Secret holding OLLAMA_API_KEY.
+    # With no explicit host, a cloud model reaches api.ollama.com via gateway
+    # credential injection; without a Secret it uses the signed-in local daemon.
+    # Remove config.host below for direct cloud routing (the default host pins
+    # requests to the local daemon even when a Secret is configured).
+    # apiKeySecretRef: "kagent-ollama-cloud"
+    # apiKeySecretKey: "OLLAMA_API_KEY"
     config:
       host: host.docker.internal:11434
       options:
@@ -705,6 +725,12 @@ providers:  # @schema skipProperties: true; additionalProperties: true
     apiKeySecretRef: kagent-anthropic
     apiKeySecretKey: ANTHROPIC_API_KEY
     # apiKey: ""
+    # Provider options rendered into spec.anthropic of the generated ModelConfig.
+    # promptCaching bills the stable prefix of every agent-loop call (tools,
+    # system prompt, previous turns) as a cache read instead of fresh input.
+    # config:
+    #   promptCaching: true
+    #   cacheTTL: "5m" # or "1h" for calls spaced more than 5 minutes apart
   azureOpenAI:
     provider: AzureOpenAI
     model: "gpt-4.1-mini"
@@ -718,51 +744,39 @@ providers:  # @schema skipProperties: true; additionalProperties: true
       azureEndpoint: ""
   gemini:
     provider: Gemini
-    model: "gemini-2.0-flash-lite"
+    model: "gemini-3.5-flash-lite"
     apiKeySecretRef: kagent-gemini
     apiKeySecretKey: GOOGLE_API_KEY
     # apiKey: ""
-
-# ==============================================================================
-# KMCP
-# ==============================================================================
-
-kmcp:  # @schema skipProperties: true; additionalProperties: true
-  enabled: true
-  nameOverride: "kmcp"
-  fullnameOverride: ""  # Override if desired
-  namespaceOverride: ""  # Override if desired (in conjunction with fullnameOverride to drop the `kagent-` prefix if you want)
-
-# ==============================================================================
-# SUBSTRATE
-# ==============================================================================
-
-substrate:  # @schema skipProperties: true; additionalProperties: true
-  enabled: false
+  mistral:
+    provider: Mistral
+    model: "mistral-large-latest"
+    apiKeySecretRef: kagent-mistral
+    apiKeySecretKey: MISTRAL_API_KEY
+    # apiKey: ""
 
 # ==============================================================================
 # BUILT-IN TOOLS
 # ==============================================================================
 
-kagent-tools:  # @schema skipProperties: true; additionalProperties: true
+kagent-tools:
   enabled: true
   nameOverride: tools
-  # Keep equal to `namespaceOverride` above. The subchart renders its
-  # Deployment, Services and ServiceAccount into its OWN namespaceOverride
-  # (default: the release namespace), while this chart's `kagent-tool-server`
-  # RemoteMCPServer composes the tool-server URL from THIS chart's namespace
-  # (templates/toolserver-kagent.yaml renders
-  # `http://<tools fullname>.<kagent namespace>:8084/mcp`). Nothing upstream
-  # ties the two together; with a release namespace other than `kagent` the
-  # Service lands in the release namespace, the URL does not resolve and the
-  # RemoteMCPServer stays Accepted=False. `make verify-sync` renders that layout
-  # and fails when the two namespaces disagree.
-  namespaceOverride: kagent
   replicaCount: 1
   # -- Node taints which will be tolerated for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).
   tolerations: []
   # -- Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).
   nodeSelector: {}
+  # Settings for the RemoteMCPServer this chart creates for the built-in tool server.
+  remoteMCPServer:
+    # -- Namespaces whose Agents may reference the tool server (spec.allowedNamespaces).
+    # Unset by default, which allows only the release namespace. Example:
+    # allowedNamespaces:
+    #   from: Selector   # All | Same | Selector
+    #   selector:
+    #     matchLabels:
+    #       kagent-tools: allowed
+    allowedNamespaces: {}
   podSecurityContext:
     runAsNonRoot: true
     seccompProfile:
@@ -780,29 +794,9 @@ kagent-tools:  # @schema skipProperties: true; additionalProperties: true
     limits:
       memory: 256Mi
   tools:
-    # The subchart reads its own image keys and does NOT inherit the parent
-    # `registry`. Mirror of ghcr.io/kagent-dev/kagent/tools. `tag` stays unset:
-    # the subchart coalesces it to its own Chart.Version, which is the vendored
-    # kagent-tools version.
-    image:
-      registry: gsoci.azurecr.io
-      repository: giantswarm/kagent-tools
-    # ephemeral-storage requests and limits are required because the cluster
-    # injects a writable /tmp emptyDir (readOnlyRootFilesystem) without a
-    # sizeLimit, which trips require-emptydir-requests-and-limits unless the
-    # mounting container declares ephemeral-storage.
-    resources:
-      requests:
-        cpu: 100m
-        memory: 128Mi
-        ephemeral-storage: 50Mi
-      limits:
-        cpu: "1"
-        memory: 512Mi
-        ephemeral-storage: 512Mi
     loglevel: "debug"
     metrics:
-      port: 8085  # Use a different port than the main service port (8084) to avoid duplicate port definitions
+      port: 8085 # Use a different port than the controller service port to avoid duplicate port definitions
 
 # ==============================================================================
 # PROXY CONFIGURATION
@@ -811,186 +805,23 @@ kagent-tools:  # @schema skipProperties: true; additionalProperties: true
 # This proxy applies to all internally-built k8s URLs:
 # - Agents as tools (agent -> agent traffic)
 # - Services as MCP Tools
-# - MCPServer resources and RemoteMCPServer resources with internal k8s URLs
+# - RemoteMCPServer resources with internal k8s URLs
 # Set this once and the controller will apply it to all agents automatically
 # Note: RemoteMCPServer resources use user-supplied URLs and do not use this proxy unless the URL is an internal k8s URL.
-proxy:  # @schema skipProperties: true; additionalProperties: true
+proxy:
   # Proxy URL for internally-built k8s URLs
   # Example: "http://proxy.kagent.svc.cluster.local:8080"
   url: ""
 
 # ==============================================================================
-# AGENTS
-# ==============================================================================
-
-k8s-agent:  # @schema skipProperties: true; additionalProperties: true
-  enabled: true
-  modelConfigRef: ""
-  memory:
-    enabled: false
-    modelConfigRef: ""
-    ttlDays: 15
-  resources:
-    requests:
-      cpu: 50m
-      memory: 128Mi
-    limits:
-      memory: 256Mi
-kgateway-agent:  # @schema skipProperties: true; additionalProperties: true
-  enabled: true
-  modelConfigRef: ""
-  memory:
-    enabled: false
-    modelConfigRef: ""
-    ttlDays: 15
-  resources:
-    requests:
-      cpu: 50m
-      memory: 128Mi
-    limits:
-      memory: 256Mi
-istio-agent:  # @schema skipProperties: true; additionalProperties: true
-  enabled: true
-  modelConfigRef: ""
-  memory:
-    enabled: false
-    modelConfigRef: ""
-    ttlDays: 15
-  resources:
-    requests:
-      cpu: 50m
-      memory: 128Mi
-    limits:
-      memory: 256Mi
-promql-agent:  # @schema skipProperties: true; additionalProperties: true
-  enabled: true
-  modelConfigRef: ""
-  memory:
-    enabled: false
-    modelConfigRef: ""
-    ttlDays: 15
-  resources:
-    requests:
-      cpu: 50m
-      memory: 128Mi
-    limits:
-      memory: 256Mi
-observability-agent:  # @schema skipProperties: true; additionalProperties: true
-  enabled: true
-  modelConfigRef: ""
-  memory:
-    enabled: false
-    modelConfigRef: ""
-    ttlDays: 15
-  resources:
-    requests:
-      cpu: 50m
-      memory: 128Mi
-    limits:
-      memory: 256Mi
-argo-rollouts-agent:  # @schema skipProperties: true; additionalProperties: true
-  enabled: true
-  modelConfigRef: ""
-  memory:
-    enabled: false
-    modelConfigRef: ""
-    ttlDays: 15
-  resources:
-    requests:
-      cpu: 50m
-      memory: 128Mi
-    limits:
-      memory: 256Mi
-helm-agent:  # @schema skipProperties: true; additionalProperties: true
-  enabled: true
-  modelConfigRef: ""
-  memory:
-    enabled: false
-    modelConfigRef: ""
-    ttlDays: 15
-  resources:
-    requests:
-      cpu: 50m
-      memory: 128Mi
-    limits:
-      memory: 256Mi
-cilium-policy-agent:  # @schema skipProperties: true; additionalProperties: true
-  enabled: true
-  modelConfigRef: ""
-  memory:
-    enabled: false
-    modelConfigRef: ""
-    ttlDays: 15
-  resources:
-    requests:
-      cpu: 50m
-      memory: 128Mi
-    limits:
-      memory: 256Mi
-cilium-manager-agent:  # @schema skipProperties: true; additionalProperties: true
-  enabled: true
-  modelConfigRef: ""
-  memory:
-    enabled: false
-    modelConfigRef: ""
-    ttlDays: 15
-  resources:
-    requests:
-      cpu: 50m
-      memory: 128Mi
-    limits:
-      memory: 256Mi
-cilium-debug-agent:  # @schema skipProperties: true; additionalProperties: true
-  enabled: true
-  modelConfigRef: ""
-  memory:
-    enabled: false
-    modelConfigRef: ""
-    ttlDays: 15
-  resources:
-    requests:
-      cpu: 50m
-      memory: 128Mi
-    limits:
-      memory: 256Mi
-
-# ==============================================================================
-# MCP TOOLS
-# ==============================================================================
-
-grafana-mcp:  # @schema skipProperties: true; additionalProperties: true
-  enabled: true
-  grafana:
-    url: "grafana.kagent:3000/api"
-    serviceAccountToken: ""
-    # apiKey: "" # Deprecated - use serviceAccountToken instead.
-    # secretRef: ""  # Name of Secret to reference (contains GRAFANA_SERVICE_ACCOUNT_TOKEN or GRAFANA_API_KEY)
-  resources:
-    requests:
-      cpu: 100m
-      memory: 128Mi
-    limits:
-      cpu: 500m
-      memory: 512Mi
-
-# ==============================================================================
 # OAUTH2-PROXY CONFIGURATION (Optional)
 # ==============================================================================
 # Enable oauth2-proxy subchart for OIDC authentication
-# Requires controller.auth.mode: trusted-proxy
+# Set config.server.auth.mode=trusted-proxy to authenticate controller requests; see
+# docs/architecture/oidc-proxy-authentication.md.
 
-oauth2-proxy:  # @schema skipProperties: true; additionalProperties: true
+oauth2-proxy:
   enabled: false
-  # The subchart reads its own image keys and does NOT inherit the parent
-  # `registry`; its default is quay.io/oauth2-proxy/oauth2-proxy, which the
-  # restrict-image-registries Kyverno policy on Giant Swarm management clusters
-  # audits and a registry egress allowlist refuses. retagger mirrors that image
-  # to gsoci (giantswarm/retagger images/skopeo-quay-io.yaml, semver >= v7.2.1).
-  # `tag` stays unset: the subchart renders v<its appVersion>, which the mirror
-  # carries. See giantswarm/kagent#68.
-  image:
-    registry: gsoci.azurecr.io
-    repository: giantswarm/oauth2-proxy
 
   # Cookie-based sessions (the redis-ha sub-chart is disabled by default;
   # enable `redis-ha.enabled` + `sessionStorage.type: redis` to switch)
@@ -1072,7 +903,11 @@ oauth2-proxy:  # @schema skipProperties: true; additionalProperties: true
     # Skip authentication for kagent's branded login page, health checks, and static assets
     # This allows unauthenticated users to see the landing page and k8s probes to work
     skip-auth-route: "^/(health|login)$"
-    skip-auth-regex: "^/(login|_next/static|_next/image|login-bg\\.(jpg|png|webp)|logo-.*\\.png|favicon\\.ico|api/agentharnesses/.*/gateway).*$"
+    # The single-page app serves /login from index.html and loads its bundle from
+    # /assets/ with env-config.js ahead of it, so all three have to be reachable
+    # unauthenticated or the branded login page renders blank. The Next.js paths
+    # this replaces (_next/static, _next/image, login-bg) no longer exist.
+    skip-auth-regex: "^/(login|assets/|env-config\\.js|logo-.*\\.png|favicon\\.ico).*$"
     # Use custom templates that redirect to kagent's branded /login page
     custom-templates-dir: "/templates"
 
@@ -1083,23 +918,6 @@ oauth2-proxy:  # @schema skipProperties: true; additionalProperties: true
 # ==============================================================================
 # OBSERVABILITY
 # ==============================================================================
-
-otel:  # @schema skipProperties: true; additionalProperties: true
-  tracing:
-    enabled: false
-    exporter:
-      otlp:
-        endpoint: ""
-        protocol: "grpc"
-        timeout: 15000  # milliseconds
-        insecure: true
-  logging:
-    enabled: false
-    exporter:
-      otlp:
-        endpoint: ""
-        timeout: 15000  # milliseconds
-        insecure: true
 
 # ==============================================================================
 # EXTRA OBJECTS

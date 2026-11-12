@@ -1,5 +1,0 @@
-apiVersion: v2
-description: A Helm Agent for kagent
-name: helm-agent
-type: application
-version: 0.10.4
